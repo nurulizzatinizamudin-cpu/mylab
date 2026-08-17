@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bio-Lab Lockdown — Escape Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== shared base reset (used by both roles) ===== */
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{margin:0; font-family:'Inter', sans-serif; min-height:100vh; overflow-x:hidden; background:#EEF3F2;}
+
+/* ===== role-select landing screen ===== */
+#roleSelect{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px;
+  background:#EEF3F2;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(14,158,144,0.06), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(124,92,217,0.05), transparent 45%),
+    radial-gradient(rgba(23,36,31,0.045) 1px, transparent 1px);
+  background-size:auto, auto, 26px 26px;
+}
+#roleSelect .rs-card{
+  background:#FFFFFF; border:1px solid #D6E2DF; border-radius:24px; padding:clamp(28px,5vw,52px);
+  max-width:520px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(23,36,31,0.12);
+}
+#roleSelect .rs-eyebrow{font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:#0E9E90; margin-bottom:10px;}
+#roleSelect h1{font-family:'Space Grotesk', sans-serif; font-size:clamp(26px,4vw,36px); margin:0 0 14px; color:#17241F; line-height:1.15;}
+#roleSelect p{color:#5C6E68; font-size:15px; line-height:1.6; margin:0 0 28px;}
+#roleSelect .rs-btn{
+  display:block; width:100%; border:none; border-radius:14px; padding:18px 22px; margin-bottom:14px;
+  font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:17px; cursor:pointer; text-align:left;
+  display:flex; align-items:center; gap:14px; transition:transform .12s ease;
+}
+#roleSelect .rs-btn:active{transform:scale(0.98);}
+#roleSelect .rs-btn .rs-icon{font-size:26px; flex:none;}
+#roleSelect .rs-btn .rs-label{display:flex; flex-direction:column; align-items:flex-start; gap:2px;}
+#roleSelect .rs-btn .rs-sub{font-family:'Inter', sans-serif; font-weight:400; font-size:12.5px; opacity:0.85;}
+#roleSelect .rs-btn-student{background:#0E9E90; color:#FFFFFF;}
+#roleSelect .rs-btn-teacher{background:#7C5CD9; color:#FFFFFF;}
+.role-switch-link{
+  position:fixed; bottom:14px; right:16px; z-index:200; font-family:'JetBrains Mono', monospace; font-size:11px;
+  color:#5C6E68; background:rgba(255,255,255,0.85); border:1px solid #D6E2DF; padding:5px 12px; border-radius:999px;
+  cursor:pointer; text-decoration:none;
+}
+#storageWarningBanner{
+  position:sticky; top:0; z-index:500;
+  font-family:'Inter', sans-serif; font-size:13.5px; line-height:1.5;
+  padding:12px 44px 12px 16px; position:relative;
+}
+#storageWarningBanner.swb-warn{background:#FFF4E0; border-bottom:2px solid #C97A12; color:#5A3B08;}
+#storageWarningBanner.swb-info{background:#E7F3F1; border-bottom:2px solid #0E9E90; color:#0B4E47;}
+#storageWarningBanner b{font-family:'Space Grotesk', sans-serif;}
+#storageWarningBanner code{background:rgba(0,0,0,0.08); padding:1px 6px; border-radius:5px; font-family:'JetBrains Mono', monospace; font-size:12px;}
+#storageWarningBanner .swb-close{
+  position:absolute; top:8px; right:10px; background:none; border:none; font-size:16px; line-height:1; cursor:pointer;
+  color:inherit; padding:4px 8px;
+}
+
+/* ===== scoped student app styles ===== */
+#studentRoot{
+  --void:#EEF3F2;
+  --panel:#FFFFFF;
+  --panel-raised:#FFFFFF;
+  --panel-raised2:#E4EEEC;
+  --line:#D6E2DF;
+  --cyan:#0E9E90;
+  --cyan-dim:#8AD6CC;
+  --amber:#C97A12;
+  --coral:#D94F3D;
+  --lime:#3F8F2C;
+  --violet:#7C5CD9;
+  --paper:#17241F;
+  --muted:#5C6E68;
+  --cyan-bright:#5FE9DB;
+  --radius:18px;
+  --disp: 'Space Grotesk', sans-serif;
+  --body: 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+#studentRoot{
+  margin:0; font-family:var(--body); background:var(--void); color:var(--paper);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(14,158,144,0.06), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(124,92,217,0.05), transparent 45%),
+    radial-gradient(rgba(23,36,31,0.045) 1px, transparent 1px);
+  background-size:auto, auto, 26px 26px;
+  min-height:100vh; overflow-x:hidden;
+}
+#studentRoot h1, #studentRoot h2, #studentRoot h3, #studentRoot .disp{font-family:var(--disp); letter-spacing:0.01em;}
+#studentRoot .mono{font-family:var(--mono);}
+#studentRoot button{font-family:var(--body); cursor:pointer;}
+#studentRoot ::selection{background:var(--cyan); color:var(--void);}
+#studentRoot .stage{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px;}
+#studentRoot .card{
+  background:linear-gradient(180deg, var(--panel-raised), var(--panel));
+  border:1px solid var(--line); border-radius:24px;
+  padding:clamp(24px,4vw,48px); max-width:760px; width:100%;
+  box-shadow:0 20px 50px rgba(23,36,31,0.12);
+  position:relative;
+}
+#studentRoot .slide-tab{
+  position:absolute; top:-14px; left:28px; background:var(--cyan); color:var(--void);
+  font-family:var(--mono); font-weight:700; font-size:11px; letter-spacing:0.12em;
+  padding:5px 14px; border-radius:999px; text-transform:uppercase;
+}
+#studentRoot .eyebrow{color:var(--cyan); font-family:var(--mono); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; margin-bottom:10px;}
+#studentRoot h1.title{font-size:clamp(28px,4.4vw,42px); margin:0 0 14px; line-height:1.1;}
+#studentRoot p.lead{color:var(--muted); font-size:clamp(15px,2vw,18px); line-height:1.6; margin:0 0 22px;}
+#studentRoot .btn{
+  border:none; border-radius:14px; padding:16px 26px; font-weight:700; font-size:17px;
+  font-family:var(--disp); transition:transform .12s ease, box-shadow .12s ease; letter-spacing:0.01em;
+}
+#studentRoot .btn:active{transform:scale(0.97);}
+#studentRoot .btn-primary{background:var(--cyan); color:#FFFFFF; box-shadow:0 8px 20px rgba(14,158,144,0.28);}
+#studentRoot .btn-primary:hover{box-shadow:0 10px 26px rgba(14,158,144,0.38);}
+#studentRoot .btn-ghost{background:transparent; color:var(--muted); border:1px solid var(--line);}
+#studentRoot .btn-ghost:hover{color:var(--paper); border-color:var(--cyan-dim);}
+#studentRoot .btn-amber{background:var(--amber); color:#FFFFFF;}
+#studentRoot .btn-block{width:100%; display:block; text-align:center;}
+#studentRoot .btn:disabled{opacity:.4; cursor:not-allowed; box-shadow:none;}
+#studentRoot .row{display:flex; gap:12px; flex-wrap:wrap;}
+#studentRoot .rules{list-style:none; padding:0; margin:0 0 26px; display:grid; gap:10px;}
+#studentRoot .rules li{display:flex; gap:12px; align-items:flex-start; color:var(--paper); font-size:15px; line-height:1.5;}
+#studentRoot .rules li .ico{color:var(--cyan); font-family:var(--mono); font-weight:700; flex:none;}
+#studentRoot input[type=text]{
+  width:100%; background:var(--void); border:1px solid var(--line); border-radius:12px;
+  padding:14px 16px; color:var(--paper); font-size:16px; font-family:var(--body); margin-bottom:12px;
+}
+#studentRoot input[type=text]:focus{outline:none; border-color:var(--cyan);}
+#studentRoot label.field-label{font-size:12px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px; display:block;}
+#studentRoot .divider{height:1px; background:var(--line); margin:22px 0;}
+#studentRoot .tiny-link{background:none; border:none; color:var(--muted); font-size:13px; text-decoration:underline; font-family:var(--body);}
+#studentRoot .tiny-link:hover{color:var(--cyan);}
+#studentRoot #hud{
+  position:sticky; top:0; z-index:40; backdrop-filter:blur(10px);
+  background:rgba(10,15,28,0.9); border-bottom:1px solid var(--line);
+  padding:12px clamp(14px,3vw,32px); display:flex; align-items:center; gap:clamp(10px,2vw,26px);
+  flex-wrap:wrap;
+}
+#studentRoot .hud-block{display:flex; flex-direction:column; gap:3px; min-width:0;}
+#studentRoot .hud-label{font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);}
+#studentRoot .hud-value{font-family:var(--disp); font-weight:700; font-size:clamp(16px,2vw,20px);}
+#studentRoot #timer-block{margin-right:auto;}
+#studentRoot #timer-digits{
+  font-family:var(--mono); font-weight:700; font-size:clamp(24px,3.4vw,32px);
+  background:#0B1220; border:1px solid var(--line); border-radius:10px; padding:4px 14px;
+  letter-spacing:0.06em; color:var(--cyan-bright); display:inline-block;
+  box-shadow:inset 0 0 18px rgba(95,233,219,0.14);
+}
+#studentRoot #timer-digits.warn-15{color:var(--amber); border-color:var(--amber);}
+#studentRoot #timer-digits.warn-10{color:var(--amber); border-color:var(--amber); box-shadow:inset 0 0 18px rgba(245,184,76,0.25);}
+#studentRoot #timer-digits.warn-5{color:var(--coral); border-color:var(--coral); animation:pulseSoft 1.4s infinite;}
+#studentRoot #timer-digits.warn-1{color:var(--coral); border-color:var(--coral); animation:pulseHard .7s infinite;}
+@keyframes pulseSoft{0%,100%{opacity:1;}50%{opacity:.55;}}
+@keyframes pulseHard{0%,100%{opacity:1; box-shadow:0 0 0 rgba(255,107,94,0);}50%{opacity:.5; box-shadow:0 0 22px rgba(255,107,94,0.6);}}
+#studentRoot .vial{width:min(220px,32vw); height:14px; border-radius:999px; background:var(--panel-raised2); border:1px solid var(--line); overflow:hidden; position:relative;}
+#studentRoot .vial-fill{height:100%; background:linear-gradient(90deg, var(--cyan-dim), var(--cyan)); transition:width .5s ease; border-radius:999px;}
+#studentRoot .codes-row{display:flex; gap:6px;}
+#studentRoot .code-token{
+  width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-weight:700; font-size:13px; border:1px solid var(--line); background:var(--panel-raised2); color:var(--muted);
+}
+#studentRoot .code-token.got{background:var(--lime); color:#FFFFFF; border-color:var(--lime);}
+#studentRoot #game-wrap{max-width:920px; margin:0 auto; padding:28px 18px 80px;}
+#studentRoot .ch-header{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+#studentRoot .ch-icon{font-size:34px; filter:drop-shadow(0 0 10px rgba(79,227,211,0.5));}
+#studentRoot .ch-title{font-size:clamp(20px,3vw,28px); margin:0;}
+#studentRoot .ch-sub{color:var(--muted); font-size:13px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.1em;}
+#studentRoot .item-card{
+  background:var(--panel-raised); border:1.5px solid var(--line); border-radius:20px; padding:clamp(20px,3vw,32px);
+  margin-bottom:18px; position:relative; transition:border-color .2s, opacity .2s;
+}
+#studentRoot .item-card.solved{border-color:var(--lime); opacity:0.92;}
+#studentRoot .item-kicker{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+#studentRoot .solved-badge{font-family:var(--body); font-size:11.5px; color:var(--lime); background:rgba(63,143,44,0.12); padding:2px 10px; border-radius:999px; text-transform:none; letter-spacing:normal; font-weight:700;}
+#studentRoot #challenge-complete-bar{position:sticky; bottom:16px; z-index:30; margin-top:8px;}
+#studentRoot .progress-hint{
+  background:var(--panel-raised2); border:1px dashed var(--line); border-radius:14px; padding:16px 20px; text-align:center;
+  color:var(--muted); font-size:14px; font-family:var(--mono);
+}
+#studentRoot .prompt{font-size:clamp(16px,2.2vw,19px); line-height:1.55; margin:0 0 20px; white-space:pre-line;}
+#studentRoot .opt-list{display:grid; gap:10px;}
+#studentRoot .opt{
+  text-align:left; background:var(--void); border:1.5px solid var(--line); border-radius:14px; padding:15px 18px;
+  color:var(--paper); font-size:15px; line-height:1.4; transition:border-color .15s, background .15s;
+}
+#studentRoot .opt:hover{border-color:var(--cyan-dim);}
+#studentRoot .opt.selected{border-color:var(--cyan); background:rgba(79,227,211,0.08);}
+#studentRoot .opt.correct{border-color:var(--lime); background:rgba(155,229,100,0.12);}
+#studentRoot .opt.wrong{border-color:var(--coral); background:rgba(255,107,94,0.12);}
+#studentRoot .match-wrap{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+@media(max-width:620px){#studentRoot .match-wrap{grid-template-columns:1fr;}}
+#studentRoot .match-col-label{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.1em;}
+#studentRoot .match-item{
+  background:var(--void); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px;
+  font-size:14px; line-height:1.4; transition:.15s;
+}
+#studentRoot .match-item.selected{border-color:var(--cyan); background:rgba(79,227,211,0.08);}
+#studentRoot .match-item.paired{border-color:var(--lime); background:rgba(155,229,100,0.1); opacity:.55;}
+#studentRoot .match-item.shake{animation:shake .35s;}
+@keyframes shake{25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+#studentRoot .order-list{display:grid; gap:8px;}
+#studentRoot .order-item{
+  background:var(--void); border:1.5px solid var(--line); border-radius:12px; padding:13px 16px;
+  display:flex; align-items:center; gap:12px; font-size:14px;
+}
+#studentRoot .order-num{width:26px; height:26px; border-radius:8px; background:var(--panel-raised2); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-weight:700; font-size:13px; flex:none;}
+#studentRoot .order-item.placed .order-num{background:var(--cyan); color:var(--void);}
+#studentRoot textarea{
+  width:100%; min-height:96px; background:var(--void); border:1.5px solid var(--line); border-radius:12px;
+  padding:14px 16px; color:var(--paper); font-family:var(--body); font-size:15px; resize:vertical;
+}
+#studentRoot textarea:focus{outline:none; border-color:var(--cyan);}
+#studentRoot .feedback{margin-top:16px; padding:14px 16px; border-radius:12px; font-size:14.5px; line-height:1.55;}
+#studentRoot .feedback.ok{background:rgba(63,143,44,0.1); border:1px solid var(--lime); color:#1E5C13;}
+#studentRoot .feedback.bad{background:rgba(217,79,61,0.1); border:1px solid var(--coral); color:#7A2318;}
+#studentRoot .hint-box{margin-top:14px; padding:12px 14px; border-radius:12px; background:rgba(201,122,18,0.08); border:1px dashed var(--amber); font-size:13.5px; color:#6B4508;}
+#studentRoot .discuss-box{margin-top:16px; padding:16px 18px; border-radius:14px; background:rgba(124,92,217,0.07); border:1px solid rgba(124,92,217,0.3);}
+#studentRoot .discuss-title{font-family:var(--disp); font-weight:700; font-size:13.5px; color:var(--violet); margin-bottom:8px;}
+#studentRoot .discuss-list{margin:0; padding-left:20px; display:grid; gap:6px;}
+#studentRoot .discuss-list li{font-size:14px; line-height:1.5; color:var(--paper);}
+#studentRoot .item-actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+#studentRoot .canvas-toolbar{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+#studentRoot .tool-btn{
+  background:var(--void); border:1.5px solid var(--line); color:var(--paper); border-radius:10px; padding:9px 14px; font-size:13px;
+}
+#studentRoot .tool-btn.active{border-color:var(--cyan); color:var(--cyan);}
+#studentRoot #draw-canvas{width:100%; height:min(46vh,420px); background:#FFFFFF; border-radius:14px; border:1.5px dashed var(--line); touch-action:none; display:block; box-shadow:inset 0 0 0 1px rgba(23,36,31,0.02);}
+#studentRoot .tube-row{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px;}
+#studentRoot .tube-btn{
+  background:var(--void); border:1.5px solid var(--line); border-radius:14px; padding:14px 10px; width:88px; text-align:center; font-size:12px;
+}
+#studentRoot .tube-btn .tube-glyph{font-size:26px; display:block; margin-bottom:6px;}
+#studentRoot .tube-btn.selected{border-color:var(--cyan);}
+#studentRoot .result-box{margin-top:14px; padding:14px 16px; border-radius:12px; background:var(--void); border:1px solid var(--line); font-size:14px; min-height:24px;}
+#studentRoot .obs-table{width:100%; border-collapse:collapse; margin-top:16px; font-size:13.5px; background:var(--void); border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+#studentRoot .obs-table th{background:var(--panel-raised2); text-align:left; padding:10px 12px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); border-bottom:1px solid var(--line);}
+#studentRoot .obs-table td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--paper);}
+#studentRoot .obs-table tr:last-child td{border-bottom:none;}
+#studentRoot .obs-empty{color:var(--muted); font-style:italic; text-align:center; padding:16px 12px;}
+#studentRoot .shape-row{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin:6px 0 18px;}
+#studentRoot .shape-btn{
+  width:78px; height:78px; border-radius:14px; background:var(--void); border:1.5px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:32px;
+}
+#studentRoot .shape-btn.selected{border-color:var(--cyan);}
+#studentRoot .m3d-tabs{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+#studentRoot .m3d-tab{background:var(--void); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-size:12.5px; color:var(--muted); font-family:var(--body);}
+#studentRoot .m3d-tab.active{border-color:var(--violet); color:var(--violet); background:rgba(124,92,217,0.08); font-weight:600;}
+#studentRoot .m3d-scene{
+  position:relative; perspective:700px; overflow:hidden; border-radius:16px; height:230px;
+  background:linear-gradient(180deg,#F8FBFA,#ECF3F1); border:1px solid var(--line); cursor:grab; touch-action:none; user-select:none;
+}
+#studentRoot .m3d-scene:active{cursor:grabbing;}
+#studentRoot .m3d-group{position:absolute; left:50%; top:50%; width:0; height:0; transform-style:preserve-3d;}
+#studentRoot .m3d-atom{position:absolute; border-radius:50%; box-shadow:0 2px 5px rgba(23,36,31,0.22);}
+#studentRoot .m3d-bond{position:absolute; height:5px; border-radius:3px; background:linear-gradient(90deg,#C1CDC9,#9DAFAA); transform-origin:0 50%;}
+#studentRoot .m3d-hint{position:absolute; bottom:8px; right:12px; font-family:var(--mono); font-size:10.5px; color:var(--muted); background:rgba(255,255,255,0.75); padding:3px 9px; border-radius:999px; pointer-events:none;}
+#studentRoot .m3d-label{position:absolute; top:8px; left:12px; font-family:var(--mono); font-size:11px; color:var(--muted); background:rgba(255,255,255,0.75); padding:3px 9px; border-radius:999px; pointer-events:none;}
+#studentRoot .m3d-legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;}
+#studentRoot .m3d-legend span{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted);}
+#studentRoot .m3d-legend i{width:10px; height:10px; border-radius:50%; display:inline-block; flex:none;}
+#studentRoot .m3d-pin{
+  position:absolute; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:rgba(124,92,217,0.15); border:2px dashed var(--violet); color:var(--violet); font-family:var(--mono);
+  font-weight:700; font-size:15px; cursor:pointer; pointer-events:auto;
+}
+#studentRoot .m3d-pin.assigned{border-style:solid; background:rgba(63,143,44,0.18); border-color:var(--lime); color:var(--lime);}
+#studentRoot .m3d-pin.wrongflash{border-color:var(--coral); background:rgba(217,79,61,0.2); color:var(--coral); animation:pinShake .3s;}
+#studentRoot .m3d-pin-tag{position:absolute; white-space:nowrap; font-size:10.5px; top:-24px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.92); padding:2px 8px; border-radius:6px; color:var(--paper); font-family:var(--body); font-weight:700; display:none; box-shadow:0 2px 6px rgba(23,36,31,0.12);}
+#studentRoot .m3d-pin.assigned .m3d-pin-tag{display:block;}
+@keyframes pinShake{25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+#studentRoot .wordbank{display:flex; gap:10px; flex-wrap:wrap; margin:16px 0;}
+#studentRoot .wordbank-item{background:var(--void); border:1.5px solid var(--line); border-radius:999px; padding:10px 18px; font-size:14px; font-weight:600; color:var(--paper);}
+#studentRoot .wordbank-item.selected{border-color:var(--violet); background:rgba(124,92,217,0.1); color:var(--violet);}
+#studentRoot .wordbank-item.used{opacity:.35; pointer-events:none;}
+#studentRoot .unlock-card{max-width:480px; margin:60px auto; background:var(--panel-raised); border:1px solid var(--line); border-radius:22px; padding:40px 36px; text-align:center; box-shadow:0 20px 50px rgba(23,36,31,0.14), 0 0 0 1px rgba(63,143,44,0.15); animation:unlockPop .45s cubic-bezier(.34,1.56,.64,1); position:relative; overflow:hidden;}
+#studentRoot .unlock-icon{font-size:56px; margin-bottom:6px; animation:unlockSpin .6s ease; filter:drop-shadow(0 4px 12px rgba(63,143,44,0.35));}
+#studentRoot .unlock-digit{font-family:var(--mono); font-size:44px; font-weight:700; color:var(--cyan-bright); background:#0B1220; display:inline-block; padding:10px 30px; border-radius:14px; margin:14px 0 22px; letter-spacing:0.08em; box-shadow:inset 0 0 20px rgba(95,233,219,0.22), 0 0 26px rgba(95,233,219,0.18); animation:digitGlow 1.8s ease-in-out infinite;}
+@keyframes unlockPop{0%{transform:scale(0.85) translateY(10px); opacity:0;}100%{transform:scale(1) translateY(0); opacity:1;}}
+@keyframes unlockSpin{0%{transform:rotate(-15deg) scale(0.7);}60%{transform:rotate(8deg) scale(1.1);}100%{transform:rotate(0) scale(1);}}
+@keyframes digitGlow{0%,100%{box-shadow:inset 0 0 20px rgba(95,233,219,0.22), 0 0 20px rgba(95,233,219,0.14);}50%{box-shadow:inset 0 0 24px rgba(95,233,219,0.32), 0 0 34px rgba(95,233,219,0.3);}}
+#studentRoot .escaped-card{position:relative; overflow:hidden; animation:unlockPop .5s cubic-bezier(.34,1.56,.64,1);}
+#studentRoot .escaped-icon{font-size:60px; margin-bottom:6px; animation:unlockSpin .7s ease;}
+#studentRoot .confetti-layer{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:5;}
+#studentRoot .confetti-piece{position:absolute; top:-10px; width:9px; height:9px; opacity:0.95; animation-name:confettiFall; animation-timing-function:cubic-bezier(.25,.46,.45,.94); animation-fill-mode:forwards;}
+@keyframes confettiFall{
+  0%{transform:translate(0,0) rotate(0deg); opacity:1;}
+  100%{transform:translate(var(--drift),340px) rotate(var(--rot)); opacity:0;}
+}
+#studentRoot .attention-overlay{position:fixed; inset:0; background:#000000; z-index:99999; display:flex; align-items:center; justify-content:center; animation:attentionFadeIn .3s ease; padding:20px;}
+#studentRoot .attention-content{text-align:center; color:#FFFFFF;}
+#studentRoot .attention-icon{font-size:64px; margin-bottom:22px; animation:attentionPulse 1.4s infinite;}
+#studentRoot .attention-text{font-family:var(--disp); font-size:clamp(24px,4.4vw,40px); font-weight:700; line-height:1.4;}
+#studentRoot .attention-text span{color:var(--cyan-bright);}
+@keyframes attentionFadeIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes attentionPulse{0%,100%{transform:scale(1); opacity:1;}50%{transform:scale(1.15); opacity:0.65;}}
+#studentRoot .lab-status{font-family:var(--mono); font-size:11px; letter-spacing:0.06em; padding:5px 12px; border-radius:999px; background:var(--panel-raised2); border:1px solid var(--line); white-space:nowrap;}
+#studentRoot .access-denied{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; color:var(--coral); text-transform:uppercase; margin-right:6px;}
+#studentRoot .temp-graph-wrap{background:var(--void); border:1px solid var(--line); border-radius:14px; padding:10px; margin-top:6px;}
+#studentRoot .temp-graph-svg{width:100%; height:auto; display:block;}
+#studentRoot .temp-btn-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+#studentRoot .temp-btn{background:var(--void); border:1.5px solid var(--line); border-radius:10px; padding:9px 14px; font-size:13.5px; font-family:var(--mono); color:var(--paper);}
+#studentRoot .temp-btn.selected{border-color:var(--violet); background:rgba(124,92,217,0.1); color:var(--violet); font-weight:700;}
+#studentRoot .temp-btn:disabled{opacity:.5;}
+#studentRoot .graphplot-svg{cursor:crosshair;}
+#studentRoot .data-table-ph th, #studentRoot .data-table-ph td{text-align:center; min-width:34px;}
+#studentRoot .plotted-cell{background:rgba(63,143,44,0.14); color:var(--lime); font-weight:700;}
+#studentRoot .annotate-diagram-scene{height:150px; margin:4px 0 4px;}
+#studentRoot .annotate-diagram-wrap{text-align:center; background:var(--void); border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:4px;}
+#studentRoot .testtubes-svg{width:100%; max-width:280px; display:block; margin:0 auto;}
+#studentRoot .annotate-caption{font-size:12.5px; color:var(--muted); text-align:center; margin:6px 0 16px; font-style:italic;}
+#studentRoot .enzyme-dock{
+  width:150px; height:150px; margin:0 auto 16px; border-radius:20px; background:radial-gradient(circle at 50% 40%, rgba(183,156,255,0.18), transparent 70%);
+  border:2px dashed var(--violet); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--violet); text-align:center; padding:10px; font-family:var(--mono);
+}
+#studentRoot .keypad{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:18px 0;}
+#studentRoot .key-slot{
+  width:52px; height:60px; border-radius:12px; background:#0B1220; border:1.5px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:22px; font-weight:700; color:#5A7A74;
+}
+#studentRoot .key-slot.filled{border-color:var(--cyan-bright); color:var(--cyan-bright);}
+#studentRoot .digit-pool{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+#studentRoot .digit-btn{
+  width:56px; height:56px; border-radius:12px; background:var(--panel-raised2); border:1.5px solid var(--line); color:var(--paper);
+  font-family:var(--mono); font-size:20px; font-weight:700;
+}
+#studentRoot .digit-btn:disabled{opacity:.25;}
+#studentRoot .role-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:22px;}
+#studentRoot .role-card{background:var(--void); border:1px solid var(--line); border-radius:14px; padding:16px;}
+#studentRoot .role-card .role-name{font-family:var(--disp); font-weight:700; color:var(--cyan); font-size:14px; margin-bottom:4px;}
+#studentRoot .role-card .role-student{font-size:15px; margin-bottom:6px;}
+#studentRoot .role-card .role-desc{font-size:12.5px; color:var(--muted); line-height:1.4; margin-bottom:10px;}
+#studentRoot .role-fill input{margin-bottom:8px;}
+#studentRoot .role-fill input:last-child{margin-bottom:0;}
+#studentRoot .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; margin:24px 0;}
+#studentRoot .stat-box{background:var(--void); border:1px solid var(--line); border-radius:14px; padding:16px; text-align:center;}
+#studentRoot .stat-box .num{font-family:var(--disp); font-size:28px; font-weight:700; color:var(--cyan);}
+#studentRoot .stat-box .lbl{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;}
+#studentRoot .waiting-banner{
+  background:rgba(245,184,76,0.1); border:1px solid var(--amber); border-radius:14px; padding:14px 18px; margin-bottom:20px;
+  font-size:14px; color:#6B4508; display:flex; align-items:center; gap:10px;
+}
+#studentRoot .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-family:var(--mono); font-size:11px; letter-spacing:0.06em; background:var(--panel-raised2); color:var(--muted); border:1px solid var(--line);}
+#studentRoot .remove-student{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
+#studentRoot .student-input-row{display:flex; gap:8px; align-items:center;}
+#studentRoot .student-input-row input{margin-bottom:8px;}
+
+/* ===== scoped teacher dashboard styles ===== */
+#teacherRoot{
+  --void:#EEF3F2; --panel:#FFFFFF; --panel-raised:#FFFFFF; --panel-raised2:#E4EEEC; --line:#D6E2DF;
+  --cyan:#0E9E90; --cyan-dim:#8AD6CC; --amber:#C97A12; --coral:#D94F3D; --lime:#3F8F2C; --violet:#7C5CD9;
+  --paper:#17241F; --muted:#5C6E68; --cyan-bright:#5FE9DB;
+  --disp:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+#teacherRoot{margin:0; background:var(--void); color:var(--paper); font-family:var(--body); min-height:100vh;
+  background-image:radial-gradient(circle at 10% 0%, rgba(14,158,144,0.05), transparent 45%), radial-gradient(circle at 95% 100%, rgba(124,92,217,0.045), transparent 45%), radial-gradient(rgba(23,36,31,0.04) 1px, transparent 1px);
+  background-size:auto,auto,28px 28px;
+}
+#teacherRoot h1, #teacherRoot h2, #teacherRoot h3, #teacherRoot .disp{font-family:var(--disp);}
+#teacherRoot .mono{font-family:var(--mono);}
+#teacherRoot button{font-family:var(--body); cursor:pointer;}
+#teacherRoot ::selection{background:var(--cyan); color:#FFFFFF;}
+#teacherRoot .stage{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px;}
+#teacherRoot .card{background:linear-gradient(180deg,var(--panel-raised),var(--panel)); border:1px solid var(--line); border-radius:24px; padding:clamp(24px,4vw,48px); max-width:640px; width:100%; box-shadow:0 20px 50px rgba(23,36,31,0.12); position:relative;}
+#teacherRoot .slide-tab{position:absolute; top:-14px; left:28px; background:var(--violet); color:#1C0F33; font-family:var(--mono); font-weight:700; font-size:11px; letter-spacing:0.12em; padding:5px 14px; border-radius:999px; text-transform:uppercase;}
+#teacherRoot .eyebrow{color:var(--violet); font-family:var(--mono); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; margin-bottom:10px;}
+#teacherRoot h1.title{font-size:clamp(26px,4vw,38px); margin:0 0 14px; line-height:1.1;}
+#teacherRoot p.lead{color:var(--muted); font-size:15px; line-height:1.6; margin:0 0 22px;}
+#teacherRoot input[type=text]{width:100%; background:var(--void); border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--paper); font-size:16px; margin-bottom:14px;}
+#teacherRoot input[type=text]:focus{outline:none; border-color:var(--cyan);}
+#teacherRoot .btn{border:none; border-radius:14px; padding:15px 24px; font-weight:700; font-size:16px; font-family:var(--disp);}
+#teacherRoot .btn-primary{background:var(--cyan); color:#FFFFFF;}
+#teacherRoot .btn-violet{background:var(--violet); color:#FFFFFF;}
+#teacherRoot .btn-attention{background:var(--coral); color:#FFFFFF;}
+#teacherRoot .btn-attention:hover{box-shadow:0 4px 14px rgba(217,79,61,0.35);}
+#teacherRoot .btn-attention-active{background:var(--lime); color:#FFFFFF; animation:attnBtnPulse 1.6s infinite;}
+@keyframes attnBtnPulse{0%,100%{box-shadow:0 0 0 0 rgba(63,143,44,0.4);}50%{box-shadow:0 0 0 8px rgba(63,143,44,0);}}
+#teacherRoot .btn-ghost{background:transparent; color:var(--muted); border:1px solid var(--line);}
+#teacherRoot .btn:disabled{opacity:.4;}
+#teacherRoot .row{display:flex; gap:12px; flex-wrap:wrap;}
+#teacherRoot .divider{height:1px; background:var(--line); margin:22px 0;}
+#teacherRoot #topbar{position:sticky; top:0; z-index:50; background:rgba(10,15,28,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  padding:14px clamp(16px,2.5vw,34px); display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+#teacherRoot .tb-block{display:flex; flex-direction:column; gap:2px;}
+#teacherRoot .tb-label{font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em;}
+#teacherRoot .tb-value{font-family:var(--disp); font-weight:700; font-size:20px;}
+#teacherRoot #tb-code{font-family:var(--mono); font-size:26px; color:var(--cyan-bright); letter-spacing:0.1em; background:#0B1220; border:1px solid var(--line); border-radius:10px; padding:2px 14px;}
+#teacherRoot #tb-clock{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--cyan-bright); background:#0B1220; border:1px solid var(--line); border-radius:10px; padding:2px 16px;}
+#teacherRoot #tb-clock.warn-15{color:var(--amber); border-color:var(--amber);}
+#teacherRoot #tb-clock.warn-10{color:var(--amber); border-color:var(--amber);}
+#teacherRoot #tb-clock.warn-5{color:var(--coral); border-color:var(--coral); animation:pulseSoftT 1.4s infinite;}
+#teacherRoot #tb-clock.warn-1{color:var(--coral); border-color:var(--coral); animation:pulseHardT .7s infinite;}
+@keyframes pulseSoftT{0%,100%{opacity:1;}50%{opacity:.55;}}
+@keyframes pulseHardT{0%,100%{opacity:1;}50%{opacity:.45;}}
+#teacherRoot .pacing-banner{padding:5px 14px; border-radius:999px; font-family:var(--mono); font-size:12px; letter-spacing:0.05em; font-weight:700;}
+#teacherRoot .pacing-ontrack{background:rgba(155,229,100,0.15); color:var(--lime); border:1px solid var(--lime);}
+#teacherRoot .pacing-behind{background:rgba(255,107,94,0.15); color:var(--coral); border:1px solid var(--coral);}
+#teacherRoot .tabs{display:flex; gap:6px; margin-left:auto;}
+#teacherRoot .tab-btn{background:var(--panel-raised2); border:1px solid var(--line); color:var(--muted); padding:9px 16px; border-radius:10px; font-size:13px; font-family:var(--disp); font-weight:600;}
+#teacherRoot .tab-btn.active{background:var(--cyan); color:#FFFFFF; border-color:var(--cyan);}
+#teacherRoot .demo-banner{background:linear-gradient(90deg, rgba(183,156,255,0.18), rgba(79,227,211,0.1)); border-bottom:1px solid var(--violet); text-align:center; padding:8px; font-family:var(--mono); font-size:12.5px; letter-spacing:0.08em; color:var(--violet);}
+#teacherRoot .join-link-bar{display:flex; align-items:center; gap:10px; padding:10px clamp(14px,2.5vw,34px); background:var(--panel-raised2); border-bottom:1px solid var(--line); flex-wrap:wrap;}
+#teacherRoot .jlb-label{font-family:var(--mono); font-size:11.5px; color:var(--muted); white-space:nowrap;}
+#teacherRoot #join-link-field{flex:1; min-width:220px; background:var(--void); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-family:var(--mono); font-size:12px; color:var(--paper);}
+#teacherRoot #wall{max-width:1400px; margin:0 auto; padding:28px clamp(14px,2.5vw,34px) 80px;}
+#teacherRoot .section-title{font-size:14px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin:0 0 16px;}
+#teacherRoot .team-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;}
+#teacherRoot .team-card{
+  background:var(--panel-raised); border-radius:20px; padding:20px; position:relative; cursor:pointer;
+  border:1.5px solid var(--line); transition:transform .15s ease;
+}
+#teacherRoot .team-card:hover{transform:translateY(-3px);}
+#teacherRoot .team-card::before{content:""; position:absolute; inset:-1.5px; border-radius:20px; padding:1.5px; z-index:-1;}
+#teacherRoot .halo-ontrack{box-shadow:0 0 0 2px var(--cyan), 0 0 20px rgba(14,158,144,0.22);}
+#teacherRoot .halo-behind{box-shadow:0 0 0 2px var(--amber), 0 0 20px rgba(201,122,18,0.22);}
+#teacherRoot .halo-stuck{box-shadow:0 0 0 2px var(--coral), 0 0 22px rgba(217,79,61,0.3); animation:stuckPulse 1.8s infinite;}
+#teacherRoot .halo-finished{box-shadow:0 0 0 2px var(--lime), 0 0 20px rgba(63,143,44,0.25);}
+#teacherRoot .halo-notstarted{box-shadow:0 0 0 1.5px var(--line);}
+@keyframes stuckPulse{0%,100%{box-shadow:0 0 0 2px var(--coral), 0 0 18px rgba(217,79,61,0.25);}50%{box-shadow:0 0 0 2px var(--coral), 0 0 30px rgba(217,79,61,0.45);}}
+#teacherRoot .status-pill{position:absolute; top:16px; right:16px; font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px; font-weight:700;}
+#teacherRoot .pill-ontrack{background:rgba(79,227,211,0.15); color:var(--cyan);}
+#teacherRoot .pill-behind{background:rgba(245,184,76,0.18); color:var(--amber);}
+#teacherRoot .pill-stuck{background:rgba(255,107,94,0.2); color:var(--coral);}
+#teacherRoot .pill-finished{background:rgba(155,229,100,0.2); color:var(--lime);}
+#teacherRoot .pill-notstarted{background:var(--panel-raised2); color:var(--muted);}
+#teacherRoot .team-name{font-family:var(--disp); font-weight:700; font-size:19px; margin:0 0 2px; padding-right:80px;}
+#teacherRoot .team-students{color:var(--muted); font-size:12px; margin-bottom:14px;}
+#teacherRoot .team-challenge{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+#teacherRoot .team-ch-icon{font-size:26px;}
+#teacherRoot .team-ch-text{font-size:13.5px; font-weight:600;}
+#teacherRoot .progress-ring-wrap{display:flex; align-items:center; gap:14px;}
+#teacherRoot .progress-track{flex:1; height:10px; border-radius:999px; background:var(--panel-raised2); border:1px solid var(--line); overflow:hidden;}
+#teacherRoot .progress-fill{height:100%; border-radius:999px; background:linear-gradient(90deg,var(--cyan-dim),var(--cyan));}
+#teacherRoot .progress-pct{font-family:var(--mono); font-size:13px; color:var(--cyan); min-width:38px; text-align:right;}
+#teacherRoot .team-meta-row{display:flex; justify-content:space-between; margin-top:14px; font-family:var(--mono); font-size:11px; color:var(--muted);}
+#teacherRoot .team-meta-row b{color:var(--paper); font-size:13px;}
+#teacherRoot .checkin-flag{margin-top:12px; font-size:11.5px; color:var(--coral); font-family:var(--mono); display:flex; align-items:center; gap:6px;}
+#teacherRoot .empty-wall{text-align:center; padding:80px 20px; color:var(--muted);}
+#teacherRoot .empty-wall .big{font-size:44px; margin-bottom:14px;}
+#teacherRoot #drawer-overlay{position:fixed; inset:0; background:rgba(4,6,12,0.65); z-index:80; display:none;}
+#teacherRoot #drawer{position:fixed; top:0; right:0; height:100vh; width:min(440px,92vw); background:var(--panel); border-left:1px solid var(--line); z-index:90; display:none; overflow-y:auto; padding:26px;}
+#teacherRoot .drawer-close{position:absolute; top:20px; right:20px; background:var(--panel-raised2); border:none; color:var(--paper); width:34px; height:34px; border-radius:10px; font-size:16px;}
+#teacherRoot .log-row{display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px;}
+#teacherRoot .log-row:last-child{border-bottom:none;}
+#teacherRoot .tag{font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:999px; text-transform:uppercase;}
+#teacherRoot .tag-ok{background:rgba(155,229,100,0.18); color:var(--lime);}
+#teacherRoot .tag-bad{background:rgba(255,107,94,0.18); color:var(--coral);}
+#teacherRoot .pacing-wrap{max-width:900px; margin:0 auto; padding:36px 20px;}
+#teacherRoot .pacing-track{position:relative; height:64px; background:var(--panel-raised); border-radius:16px; border:1px solid var(--line); margin:30px 0 10px; overflow:hidden;}
+#teacherRoot .pacing-seg{position:absolute; top:0; bottom:0; border-right:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-family:var(--mono); color:var(--muted); text-align:center; padding:4px;}
+#teacherRoot .pacing-now{position:absolute; top:-6px; bottom:-6px; width:3px; background:var(--cyan); box-shadow:0 0 12px var(--cyan);}
+#teacherRoot .pacing-now::after{content:"NOW"; position:absolute; top:-22px; left:50%; transform:translateX(-50%); font-family:var(--mono); font-size:10px; color:var(--cyan); white-space:nowrap;}
+#teacherRoot .key-wrap{max-width:900px; margin:0 auto; padding:30px 20px 80px;}
+#teacherRoot .key-ch{background:var(--panel-raised); border:1px solid var(--line); border-radius:18px; padding:22px 24px; margin-bottom:18px;}
+#teacherRoot .key-ch h3{margin:0 0 4px; font-size:18px;}
+#teacherRoot .key-ch .kc-code{font-family:var(--mono); color:var(--lime); font-size:12px; margin-bottom:14px;}
+#teacherRoot .key-item{border-top:1px solid var(--line); padding:14px 0;}
+#teacherRoot .key-item:first-of-type{border-top:none;}
+#teacherRoot .key-q{font-size:14px; margin:0 0 6px; color:var(--paper); white-space:pre-line;}
+#teacherRoot .key-a{font-size:13.5px; color:var(--lime); margin:0 0 4px;}
+#teacherRoot .key-note{font-size:12.5px; color:var(--muted); margin:0;}
+#teacherRoot .misconception{background:rgba(217,79,61,0.08); border-left:3px solid var(--coral); padding:8px 12px; margin-top:8px; font-size:12.5px; color:#7A2318; border-radius:0 8px 8px 0;}
+#teacherRoot .analytics-wrap{max-width:1100px; margin:0 auto; padding:30px 20px 80px;}
+#teacherRoot .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:30px;}
+#teacherRoot .stat-box{background:var(--panel-raised); border:1px solid var(--line); border-radius:16px; padding:20px; text-align:center;}
+#teacherRoot .stat-box .num{font-family:var(--disp); font-size:30px; font-weight:700; color:var(--cyan);}
+#teacherRoot .stat-box .lbl{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase; margin-top:6px;}
+#teacherRoot .concept-bar-row{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+#teacherRoot .concept-label{width:220px; font-size:13px; flex:none;}
+#teacherRoot .concept-track{flex:1; height:14px; border-radius:999px; background:var(--panel-raised2); overflow:hidden;}
+#teacherRoot .concept-fill{height:100%; border-radius:999px;}
+</style>
+</head>
+<body>
+
+<div id="storageWarningBanner" style="display:none;"></div>
+
+<div id="roleSelect">
+  <div class="rs-card">
+    <div class="rs-eyebrow">Bio-Lab Lockdown</div>
+    <h1>Who's opening this link?</h1>
+    <p>This page works as both the student escape room and the teacher's live dashboard — pick your role below. Everyone should use the <strong>same session code</strong> for progress to sync correctly.</p>
+    <button class="rs-btn rs-btn-student" id="btn-role-student">
+      <span class="rs-icon">🧪</span>
+      <span class="rs-label">I'm a Student Team<span class="rs-sub">Join the escape room and solve challenges</span></span>
+    </button>
+    <button class="rs-btn rs-btn-teacher" id="btn-role-teacher">
+      <span class="rs-icon">🗂</span>
+      <span class="rs-label">I'm the Teacher<span class="rs-sub">Create a session and watch live progress</span></span>
+    </button>
+  </div>
+</div>
+
+<div id="studentRoot" style="display:none;">
+<div id="hud" style="display:none;"></div>
+<div id="studentApp"></div>
+</div>
+
+<div id="teacherRoot" style="display:none;">
+<div id="teacherApp"></div>
+<div id="drawer-overlay"></div>
+<div id="drawer"></div>
+</div>
+
+<a class="role-switch-link" id="role-switch-link" style="display:none;" href="#">↺ Switch role</a>
+
+<script>
+(function(){
+
+/* =====================================================================
+   BIO-LAB LOCKDOWN — student escape room
+   Session sync via SYNC (Firebase or local-only — see SYNC_CONFIG near the end of the file), keyed by session code.
+===================================================================== */
+
+const LESSON_SECONDS = 30*60;
+
+const ROLES = [
+  {name:"Team Leader", desc:"Keeps everyone focused and makes the final call on each answer."},
+  {name:"Science Investigator", desc:"Reads each question aloud and identifies the Biology concept."},
+  {name:"Evidence Analyst", desc:"Examines diagrams, results and data tables closely."},
+  {name:"Recorder", desc:"Sketches the team's ideas on the canvas and writes down the answer."}
+];
+/* No Timekeeper — the HUD clock at the top of the screen tracks time for everyone,
+   so all 5 teammates get a real, active role and nobody is just watching the clock. */
+
+/* ---------------- content data ---------------- */
+const CHALLENGES = [
+{
+  key:"vault", icon:"🧪", title:"Challenge 1 · The Molecule Vault",
+  intro:`The vault door is covered in unlabelled specimen jars. Identify what's really inside each one before the scanner will let your team through.`,
+  code:"7",
+  recall:{
+    prompt:`This challenge covers all three molecule groups. Explore the 3D models below and discuss as a team: what is the building block of a carbohydrate? A protein? A fat? Then sketch your own quick versions on the canvas.`,
+    questions:[`What shape did your team use for glucose, and how does starch look different from it?`,`How do amino acids join together to build up a protein chain?`,`How many fatty acid tails does a fat molecule have, and what do they attach to?`],
+    canvas:true, model3d:"multi"
+  },
+  items:[
+    {type:"matching", id:"c1i1",
+      prompt:`Match each biological molecule to its building block (monomer).`,
+      left:["Carbohydrate","Protein","Fat (lipid)"],
+      right:["Fatty acids and glycerol","Simple sugars (monosaccharides)","Amino acids"],
+      correctMap:{0:1, 1:2, 2:0},
+      hint:`Starch and glycogen are both made of many repeating sugar units joined together — which molecule group does that describe?`},
+    {type:"mcq", id:"c1i2",
+      prompt:`A diagram shows a long, branched chain made entirely of repeating glucose units, stored in liver and muscle cells. What is this molecule most likely to be?`,
+      options:[`A protein`,`A single glucose monomer`,`Glycogen (a carbohydrate)`,`A fatty acid`],
+      correct:2,
+      fbCorrect:`Correct — glycogen is a carbohydrate made of many glucose units joined together. It's the main short-term energy store in animal liver and muscle.`,
+      fbWrong:`Look again at what every unit in the chain is made of. If it's all glucose repeated, which molecule group does that belong to?`,
+      hint:`All the repeating units are the same type of sugar — which food group is built entirely from sugar units?`},
+    {type:"mcq", id:"c1i3",
+      prompt:`Which molecule provides the most energy per gram, and is used by the body mainly for long-term energy storage and insulation?`,
+      options:[`Carbohydrate`,`Vitamin`,`Protein`,`Fat`],
+      correct:3,
+      fbCorrect:`Correct — fats store roughly twice as much energy per gram as carbohydrates or proteins, which is why they're used as the body's long-term energy reserve.`,
+      fbWrong:`Think about which molecule is stored under the skin and around organs as an energy reserve.`,
+      hint:`This molecule is stored under your skin and around your organs.`},
+    {type:"mcq", id:"c1i4",
+      prompt:`Thinking question: A protein and a carbohydrate both give positive results in food tests, but only ONE of them could ever function as an enzyme. What extra feature would that molecule need to actually work as an enzyme?`,
+      options:[`More carbon atoms than the other molecule`,`A longer chain of monomers than the other molecule`,`A specifically-shaped active site that binds only to one substrate`,`The ability to dissolve in water`],
+      correct:2,
+      fbCorrect:`Correct — only proteins can be enzymes, and even then, only if they fold into a shape that creates an active site complementary to one substrate. You'll investigate this "lock-and-key" idea properly in the Enzyme Chamber ahead.`,
+      fbWrong:`Think about what makes an enzyme special compared to an ordinary protein — it isn't about size or solubility.`,
+      hint:`This links to something you'll explore in a later challenge — a specific 3D shape that only fits one "key".`},
+    {type:"annotate", id:"c1i5",
+      prompt:`Annotate & write: sketch and label ONE molecule from each of the three groups you explored — carbohydrate, protein, and fat. Next to each drawing, write its building block AND one thing it's used for in the body.`,
+      diagram:{model:"sugar", caption:`Here's the glucose ↔ starch model again — discuss how a single monomer becomes a long polymer, then sketch your own protein and fat versions.`}}
+  ]
+},
+{
+  key:"foodlab", icon:"🧫", title:"Challenge 2 · The Food Testing Lab",
+  intro:`Three unlabelled samples sit on the bench. Choose the correct food tests to find out what's really inside them.`,
+  code:"3",
+  recall:{
+    prompt:`Before you start testing, discuss as a team: which food test detects which molecule (starch, reducing sugar, protein, fat)? And what's the difference between an OBSERVATION (what you see) and a CONCLUSION (what you infer from it)?`,
+    questions:[`Which test would your team try first on an unknown sample, and why?`,`Can you give an example of an observation, and a conclusion drawn from it?`],
+    canvas:false, model3d:null
+  },
+  items:[
+    {type:"foodtest", id:"c2i1",
+      prompt:`Select a sample tube and a food test, then run the test. Record what you OBSERVE in the table as you go — you'll use it to draw your conclusions in the next questions.`},
+    {type:"mcq", id:"c2i2",
+      prompt:`Sample X turns blue-black when iodine solution is added. What can you correctly conclude?`,
+      options:[`The sample contains protein`,`Starch is present in Sample X`,`Sample X is definitely pure starch`,`A reducing sugar is present`],
+      correct:1,
+      fbCorrect:`Correct. The blue-black colour is the observation; concluding that starch is present is the inference (conclusion) drawn from it.`,
+      fbWrong:`Remember: the colour change is the observation. What does a blue-black colour with iodine solution specifically indicate?`,
+      hint:`Iodine solution is the specific test for one particular carbohydrate.`},
+    {type:"mcq", id:"c2i3",
+      prompt:`A student writes: "The solution turned brick-red, so a reducing sugar must be present." Which part of this sentence is the OBSERVATION?`,
+      options:[`"a reducing sugar must be present"`,`Neither — this is only a hypothesis`,`Both parts equally`,`"The solution turned brick-red"`],
+      correct:3,
+      fbCorrect:`Correct — what you can actually SEE (the colour change) is the observation. What you INFER from it (reducing sugar present) is the conclusion.`,
+      fbWrong:`An observation is something you can directly see or measure. A conclusion is what you infer from that observation.`,
+      hint:`Ask yourself: which part of the sentence could you literally see with your eyes?`},
+    {type:"order", id:"c2i4",
+      prompt:`Put the steps of Benedict's test in the correct order.`,
+      steps:["Add an equal volume of Benedict's solution to the food sample","Mix well","Heat the test tube in a boiling water bath","Observe the colour change"],
+      hint:`You must add the reagent and mix it before it ever goes anywhere near heat.`},
+    {type:"mcq", id:"c2i5",
+      prompt:`Application: A new sample, Sample W, is tested with all four food tests. It gives a POSITIVE result (colour change) for BOTH the iodine test AND the Biuret test, but a NEGATIVE result for the ethanol emulsion test. What can your team conclude about Sample W?`,
+      options:[`Sample W contains only starch`,`Sample W contains starch, protein and fat`,`The results are contradictory, so no conclusion can be drawn`,`Sample W contains both starch and protein, but no fat`],
+      correct:3,
+      fbCorrect:`Correct — a positive iodine result shows starch is present, a positive Biuret result shows protein is present, and a negative ethanol emulsion result shows no fat is present. A sample can contain more than one type of molecule at once.`,
+      fbWrong:`Look at each test result separately first: what does a positive iodine result mean on its own? What does a positive Biuret result mean on its own? Then combine them.`,
+      hint:`Two positive results mean two different molecules are both present — think about which test detects which molecule.`},
+    {type:"annotate", id:"c2i6",
+      prompt:`Annotate & write: sketch the three sample test tubes from your bench. Colour or label each one with the result you observed, and write next to each one whether that's an OBSERVATION or a CONCLUSION.`,
+      diagram:{model:"testtubes", caption:`Discuss as a team: what result would you expect in each tube if it contained starch? Protein? Fat?`}}
+  ]
+},
+{
+  key:"code", icon:"🔐", title:"Challenge 3 · Crack the Molecule Code",
+  intro:`A locked terminal shows only cryptic lab notes. Decode each clue to reveal the molecule — and a digit of the override code.`,
+  code:"9",
+  recall:{
+    prompt:`Discuss and sketch as a team: how is a polysaccharide like starch built from many repeating glucose units? How is a protein built from amino acids? What is the key building-block difference between carbohydrates, proteins and fats?`,
+    questions:[`How many repeating units make up a polysaccharide chain?`,`How do amino acids connect to form a protein?`,`Can your team name the building block for each of the three molecule groups?`],
+    canvas:true, model3d:null
+  },
+  items:[
+    {type:"shortanswer", id:"c3i1",
+      prompt:`Clue: "Long chains of glucose units. Found in rice, bread and potatoes. Turns blue-black with iodine solution." Name this molecule.`,
+      keywords:["starch"],
+      minLength:3,
+      modelAnswer:`Starch — a carbohydrate (polysaccharide) made of many glucose units joined together.`,
+      fbCorrect:`Correct — starch is the storage carbohydrate found in plants.`,
+      fbTry:`Look at the clue again — which test result was mentioned, and which molecule does that specific test detect?`,
+      hint:`One of the clues is literally the name of a food test result.`},
+    {type:"mcq", id:"c3i2",
+      prompt:`Clue: "Made of amino acids joined in long folded chains. Turns purple/lilac with Biuret solution. Needed for growth and repair." What is this molecule?`,
+      options:[`Fat`,`Protein`,`Carbohydrate`,`An enzyme (not a molecule group)`],
+      correct:1,
+      fbCorrect:`Correct — the purple/lilac colour with Biuret solution is the signature test result for protein.`,
+      fbWrong:`Which test was mentioned in the clue, and what does that specific colour change indicate?`,
+      hint:`Biuret test = one specific molecule group.`},
+    {type:"mcq", id:"c3i3",
+      prompt:`A student writes: "Proteins are made of fatty acids joined together, and fats are made of amino acids." What is the error in this statement?`,
+      options:[`Proteins have no building blocks`,`The student has swapped the two building blocks around`,`There is no error — this is correct`,`Fats are actually made of glucose`],
+      correct:1,
+      fbCorrect:`Correct — proteins are made of amino acids, and fats are made of fatty acids + glycerol. The student has mixed the two up.`,
+      fbWrong:`Check which building block belongs to which molecule — has the student mixed them up?`,
+      hint:`Amino acids belong to one molecule group, fatty acids + glycerol belong to another.`},
+    {type:"mcq", id:"c3i4",
+      prompt:`Thinking question: Starch and cellulose are BOTH polysaccharides made entirely of glucose units, yet starch is a compact energy store while cellulose is a tough structural fibre in plant cell walls. What does this tell you about how the same building block can form very different molecules?`,
+      options:[`One of them isn't really a carbohydrate`,`The number of glucose units is the only thing that ever matters`,`The way the monomers are joined and arranged determines the molecule's final shape and properties, even with identical building blocks`,`Cellulose must secretly contain a different type of sugar`],
+      correct:2,
+      fbCorrect:`Correct — starch and cellulose are both entirely glucose, but the way those units link together differs, giving each molecule a very different shape and job. Building blocks alone don't decide a molecule's role — how they're arranged matters too.`,
+      fbWrong:`Both molecules use the exact same building block — so what ELSE could explain why they behave so differently?`,
+      hint:`Think about arrangement and linkage, not just "what" the building blocks are.`},
+    {type:"annotate", id:"c3i5",
+      prompt:`Annotate & write: draw a concept map connecting "building block", "molecule" and "food test" — once for starch, once for protein. Use arrows to show the connections, and write a one-line reason for each arrow.`,
+      diagram:{model:"protein", caption:`Here's the amino acid ↔ protein model again — discuss how the building blocks link together before you map out the connections.`}}
+  ]
+},
+{
+  key:"enzyme", icon:"🧬", title:"Challenge 4 · The Enzyme Chamber",
+  intro:`This chamber only opens if the correct substrate binds to the enzyme's active site — the lock-and-key hypothesis in action.`,
+  code:"5",
+  recall:{
+    prompt:`Drag the 3D model below to explore the enzyme and its active site. As a team, discuss: what is a catalyst? And why might only one substrate shape be able to fit into this particular active site?`,
+    questions:[`What does a catalyst do to the speed of a reaction?`,`Why do you think only one substrate shape fits the active site shown?`],
+    canvas:false, model3d:"enzyme"
+  },
+  items:[
+    {type:"labeldiagram", id:"c4i1",
+      prompt:`This diagram shows the lock-and-key hypothesis: an enzyme, its active site, a substrate, and the products formed after the reaction. Tap a label below, then tap the matching part of the diagram to place it.`,
+      labels:["Enzyme","Active Site","Substrate","Product"],
+      hint:`The active site is the notch or gap on the enzyme where the substrate fits — like the keyhole in a lock.`},
+    {type:"mcq", id:"c4i2",
+      prompt:`Based on the diagram you just labelled, what is an enzyme?`,
+      options:[`A vitamin needed for digestion`,`A biological catalyst that speeds up a reaction and remains chemically unchanged at the end of the reaction`,`A protein that is always used up in the reaction`,`A type of carbohydrate that stores energy`],
+      correct:1,
+      fbCorrect:`Correct — enzymes are biological catalysts. They speed up reactions but remain chemically unchanged at the end of the reaction, so they can be reused.`,
+      fbWrong:`Think about what a catalyst does to the speed of a reaction, and whether it gets chemically changed by it.`,
+      hint:`The key word is "catalyst" — what does a catalyst do?`},
+    {type:"mcq", id:"c4i3",
+      prompt:`Why can this enzyme act on this substrate but not a differently-shaped one?`,
+      options:[`The active site has a specific shape complementary to only one substrate (lock-and-key)`,`Enzymes can bind to any substrate shape given enough time`,`Enzymes only ever work on carbohydrates`,`The other substrates were simply the wrong colour`],
+      correct:0,
+      fbCorrect:`Correct — this is enzyme specificity. The active site's shape is complementary to only one substrate, like a lock and its matching key.`,
+      fbWrong:`Think back to the diagram — what determined whether the substrate fitted the active site or not?`,
+      hint:`It's about SHAPE matching, not colour or size alone.`},
+    {type:"mcq", id:"c4i4",
+      prompt:`Thinking question: A mutation slightly changes the shape of an enzyme's active site. Predict what would happen to the enzyme's ability to bind its normal substrate.`,
+      options:[`The substrate may no longer fit properly, reducing or preventing the reaction — even a small shape change can disrupt specificity`,`Nothing changes, since enzymes always adapt to fit any substrate`,`The substrate will change its own shape to match the new active site`,`The enzyme will start working faster than before`],
+      correct:0,
+      fbCorrect:`Correct — because specificity depends on a precise shape match, even a small change to the active site can stop the substrate from binding properly. This is one reason some genetic mutations affect how well enzymes work in the body.`,
+      fbWrong:`Remember specificity depends on an exact shape match — what happens when that exact shape is disturbed?`,
+      hint:`Think back to what "complementary shape" means for binding.`},
+    {type:"annotate", id:"c4i5",
+      prompt:`Annotate & write: draw your OWN enzyme-and-substrate diagram — different from the puzzle above — labelling the enzyme, active site, substrate and product. Underneath, write one sentence explaining specificity in your own words.`,
+      diagram:{model:"enzyme", caption:`Here's the enzyme + substrate model again for reference while you sketch your own version.`}}
+  ]
+},
+{
+  key:"conditions", icon:"⚗️", title:"Challenge 5 · The Enzyme Conditions Lab",
+  intro:`A sensor shows this enzyme's activity changing with both temperature AND pH. Study each graph to find out why — and pinpoint its optimum conditions.`,
+  code:"2",
+  recall:{
+    prompt:`Discuss as a team: how do you think temperature AND pH affect how fast an enzyme works? What might happen if either one moves too far from the enzyme's ideal conditions?`,
+    questions:[`What do you think happens to enzyme activity as temperature rises from 0°C?`,`Do you think all enzymes in the body work best at the same pH? Why might that not be a good idea?`],
+    canvas:false, model3d:null
+  },
+  items:[
+    {type:"graphread", id:"c5i1",
+      prompt:`The graph shows how the rate of reaction of an enzyme changes with temperature. Study the curve as a team, then tap the temperature you think is the OPTIMUM — the temperature at which the enzyme works fastest.`,
+      tempOptions:[0,10,20,30,37,40,50,60,70,80],
+      correctTemp:37, tolerance:3,
+      fbCorrect:`Correct — the curve peaks at around 37°C, the optimum temperature for this enzyme (close to human body temperature). This is where the rate of reaction is highest.`,
+      fbWrong:`Look for the HIGHEST point on the curve — not where it starts, and not where it ends.`,
+      hint:`The peak of the curve, not the beginning or the end, marks the optimum temperature.`},
+    {type:"mcq", id:"c5i2",
+      prompt:`Why does the rate of reaction fall sharply above the optimum temperature?`,
+      options:[`The substrate evaporates at high temperature`,`The enzyme runs out of active sites to use`,`The enzyme moves too fast for the substrate to catch it`,`The enzyme denatures — the heat changes the shape of its active site, so the substrate no longer fits`],
+      correct:3,
+      fbCorrect:`Correct — at high temperatures the enzyme denatures. Its active site changes shape permanently, so the substrate can no longer bind and the reaction rate drops sharply.`,
+      fbWrong:`Think about what heat does to a protein's shape — enzymes are proteins.`,
+      hint:`This is the same word used to describe what happens to egg white when you fry it.`},
+    {type:"mcq", id:"c5i3",
+      prompt:`Why is the rate of reaction slow at low temperatures (e.g. 0–10°C)?`,
+      options:[`Molecules have less kinetic energy, so fewer successful collisions happen between enzyme and substrate`,`The enzyme denatures at low temperature`,`The substrate freezes solid and can't move at all`,`The active site becomes too big to bind the substrate`],
+      correct:0,
+      fbCorrect:`Correct — at low temperatures, molecules move slower and have less kinetic energy, so enzyme and substrate collide less often and less successfully. The enzyme itself is not damaged.`,
+      fbWrong:`Low temperature doesn't damage the enzyme's shape — think about how temperature affects how fast molecules move.`,
+      hint:`Low temperature slows movement — it doesn't destroy the enzyme's shape.`},
+    {type:"mcq", id:"c5i4",
+      prompt:`Application: A food scientist wants to store this enzyme so it works as SLOWLY as possible, but without being permanently damaged — so it can be "switched back on" simply by warming it up again later. Based on the graph and what you've learned, what should they do?`,
+      options:[`Temperature makes no difference to storage, only pH does`,`Store it exactly at 37°C — this keeps it ready to use at any time`,`Store it at a low temperature (e.g. 4°C) — this slows the enzyme down without denaturing it`,`Store it at a high temperature (e.g. 70°C) — this stops the reaction completely and safely`],
+      correct:2,
+      fbCorrect:`Correct — low temperature slows enzyme activity by reducing kinetic energy, but this is reversible: warming it back up restores normal activity. High temperature would permanently denature it instead.`,
+      fbWrong:`Think about which of the two temperature effects you just learned is PERMANENT, and which is temporary — which one would let the scientist "switch it back on" later?`,
+      hint:`One temperature effect from this challenge is permanent, and one is reversible — which is which?`},
+    {type:"graphplot", id:"c5i5",
+      prompt:`Your team has collected rate-of-reaction data for this SAME enzyme at different pH levels (see table below). Plot each point on the grid by tapping its position — pH along the bottom, Rate of Reaction up the side. Once all 7 points are placed, the curve connects automatically.`,
+      scalePrompt:`Before you can plot, your team needs to set up the y-axis. Your rate-of-reaction values range up to 95. What should the TOP value of your y-axis be, so every point fits neatly without wasting too much space? (Hint: choose a sensible round number a little higher than your highest value.)`,
+      dataPoints:[[2,5],[4,25],[6,60],[7,95],[8,58],[10,20],[12,4]],
+      tolerance:{ph:0.9, rate:9},
+      hint:`Find the pH value along the bottom axis first, then move your finger up until you reach the matching Rate value on the side axis — tap where the two meet.`},
+    {type:"mcq", id:"c5i6",
+      prompt:`Based on the graph your team just plotted, what is the optimum pH for this enzyme?`,
+      options:[`pH 2 — the first point plotted`,`pH 7 (neutral) — the peak of the curve your team plotted`,`pH makes no difference to this enzyme`,`pH 12 — the last point plotted`],
+      correct:1,
+      fbCorrect:`Correct — the curve you plotted peaks at pH 7. Just like with temperature, there's an optimum pH where the enzyme's active site is the best shape to bind its substrate.`,
+      fbWrong:`Look at your own plotted graph — which pH value gave the HIGHEST rate of reaction?`,
+      hint:`Check the table again — which pH had the highest Rate value?`},
+    {type:"mcq", id:"c5i7",
+      prompt:`Application: Pepsin is an enzyme in your stomach that digests protein. Unlike most enzymes in the body, pepsin works best at a very LOW pH (around pH 2) — the opposite of the enzyme in your graph. What does this tell you about pepsin's active site?`,
+      options:[`Pepsin isn't a real enzyme, since real enzymes only work at neutral pH`,`Pepsin works identically at every pH; the stomach just makes it faster`,`This is a trick question — pH cannot affect any enzyme`,`Pepsin's active site has a different shape, complementary to its substrate only under acidic conditions — each enzyme has its own optimum pH`],
+      correct:3,
+      fbCorrect:`Correct — every enzyme has its own optimum pH, matched to where it needs to work. Pepsin's active site is shaped for the acidic stomach, while enzymes like amylase in saliva suit near-neutral pH instead.`,
+      fbWrong:`Think back to enzyme specificity from Challenge 4 — each enzyme's active site has one shape it works best with.`,
+      hint:`This connects to the idea of enzyme specificity — think about what determines an enzyme's "best" conditions.`},
+    {type:"annotate", id:"c5i8",
+      prompt:`Annotate & write: from memory — no peeking at the graphs above — sketch what you think the temperature curve AND the pH curve look like, side by side. Label the optimum point on each, and write one sentence comparing them.`}
+  ]
+},
+{
+  key:"finale", icon:"🚪", title:"Challenge 6 · Final Escape",
+  intro:`The exit lock needs the override digits your team has collected, entered in the order you solved them — but first, one last mystery sample.`,
+  code:null,
+  recall:null,
+  items:[
+    {type:"mcq", id:"c6i1",
+      prompt:`Final sample: it turns blue-black with iodine solution, shows no colour change with Biuret solution, and is broken down by an enzyme found in saliva called amylase. Which molecule is present, and what does amylase do to it?`,
+      options:[`Fat is present; amylase turns it into starch`,`Protein is present; amylase builds it into a longer chain`,`Starch is present; amylase breaks it down into simpler sugars`,`Starch is present; amylase has no effect on it`],
+      correct:2,
+      fbCorrect:`Correct — the iodine result identifies starch, and amylase is the enzyme that breaks starch down into simpler sugars.`,
+      fbWrong:`Match the test result to the molecule first, then think about what an enzyme does to its substrate.`,
+      hint:`The iodine test result should tell you exactly which molecule is present.`},
+    {type:"mcq", id:"c6i2",
+      prompt:`Why can amylase break down starch but not protein?`,
+      options:[`Amylase's active site shape only fits the starch molecule, not protein`,`Amylase works equally well on all molecules`,`Amylase destroys itself after each reaction`,`Protein is too small for any enzyme to act on`],
+      correct:0,
+      fbCorrect:`Correct — enzyme specificity: amylase's active site is complementary in shape to starch only.`,
+      fbWrong:`This is the same idea as the Enzyme Chamber and Enzyme Conditions Lab challenges — think about shape.`,
+      hint:`Specificity depends on the shape of the active site.`},
+    {type:"mcq", id:"c6i3",
+      prompt:`Thinking question: This same enzyme is accidentally left at 70°C for an hour, then cooled back down to 37°C. Would it likely work normally again? Use what your team learned today to explain your prediction.`,
+      options:[`No — the enzyme would simply evaporate at 70°C`,`Yes, because enzymes cannot be damaged by temperature at all`,`Yes — cooling always restores enzyme activity, no matter how hot it got`,`No — at 70°C the enzyme would have denatured permanently, so cooling it back down would NOT restore its activity`],
+      correct:3,
+      fbCorrect:`Correct — 70°C is well above this enzyme's optimum and would permanently denature it by changing its active site's shape. Unlike the reversible slowdown from cold, denaturing cannot be undone by cooling back down.`,
+      fbWrong:`Think back to the Conditions Lab — one temperature effect was reversible, and one was permanent. Which one is 70°C?`,
+      hint:`70°C is well past this enzyme's optimum — what happens to an enzyme's shape at temperatures that high?`},
+    {type:"annotate", id:"c6i4",
+      prompt:`Exit ticket — annotate & write: before entering the final code, write down ONE molecule, ONE food test, and ONE enzyme idea your team used to solve today's escape room.`},
+    {type:"finallock", id:"c6i5",
+      prompt:`Tap the collected digits below, in the order your team solved them (Challenge 1 → 5), to override the exit lock.`}
+  ]
+}
+];
+const TOTAL_ITEMS = CHALLENGES.reduce((s,c)=>s+c.items.length,0);
+const FOODTEST_DATA = {
+  X:{name:"Sample X", iodine:"Turns blue-black.", benedict:"Stays blue — no colour change on heating.", biuret:"Stays pale blue — no colour change.", ethanol:"No white emulsion forms."},
+  Y:{name:"Sample Y", iodine:"Stays orange-brown — no colour change.", benedict:"Forms a brick-red precipitate on heating.", biuret:"Stays pale blue — no colour change.", ethanol:"No white emulsion forms."},
+  Z:{name:"Sample Z", iodine:"Stays orange-brown — no colour change.", benedict:"Stays blue — no colour change on heating.", biuret:"Turns purple / lilac.", ethanol:"No white emulsion forms."}
+};
+const SHAPES = [{id:"circle",glyph:"⬤",fits:false},{id:"hex",glyph:"⬡",fits:true},{id:"star",glyph:"★",fits:false}];
+
+/* ============ temperature-vs-enzyme-activity graph (SVG) ============ */
+const TEMP_CURVE = [[0,5],[10,15],[20,35],[30,65],[37,95],[40,90],[50,55],[60,15],[70,3],[80,1]];
+const TG_XMIN=0, TG_XMAX=80, TG_YMIN=0, TG_YMAX=100;
+const TG_X0=55, TG_X1=460, TG_Y0=215, TG_Y1=25;
+function tgX(temp){ return TG_X0 + (temp-TG_XMIN)/(TG_XMAX-TG_XMIN)*(TG_X1-TG_X0); }
+function tgY(rate){ return TG_Y0 - (rate-TG_YMIN)/(TG_YMAX-TG_YMIN)*(TG_Y0-TG_Y1); }
+function tgRateAt(temp){
+  for(let i=0;i<TEMP_CURVE.length-1;i++){
+    const [t0,r0]=TEMP_CURVE[i], [t1,r1]=TEMP_CURVE[i+1];
+    if(temp>=t0 && temp<=t1){ const frac=(temp-t0)/(t1-t0); return r0+(r1-r0)*frac; }
+  }
+  return TEMP_CURVE[TEMP_CURVE.length-1][1];
+}
+function buildTempGraphSVG(selectedTemp){
+  const pathD = TEMP_CURVE.map(([t,r],i)=> (i===0?"M":"L")+tgX(t).toFixed(1)+","+tgY(r).toFixed(1)).join(" ");
+  const gridlines = [0,25,50,75,100].map(r=>`<line x1="${TG_X0}" y1="${tgY(r)}" x2="${TG_X1}" y2="${tgY(r)}" stroke="#D6E2DF" stroke-width="1"/>`).join("");
+  const xticks = [0,10,20,30,40,50,60,70,80].map(t=>`<text x="${tgX(t)}" y="${TG_Y0+18}" font-size="10" fill="#5C6E68" text-anchor="middle" font-family="JetBrains Mono, monospace">${t}</text>`).join("");
+  let marker="";
+  if(selectedTemp!==undefined && selectedTemp!==null){
+    const r = tgRateAt(selectedTemp);
+    marker = `<line x1="${tgX(selectedTemp)}" y1="${TG_Y0}" x2="${tgX(selectedTemp)}" y2="${tgY(r)}" stroke="#7C5CD9" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <circle cx="${tgX(selectedTemp)}" cy="${tgY(r)}" r="7" fill="#7C5CD9" stroke="#fff" stroke-width="2"/>`;
+  }
+  return `<svg viewBox="0 0 500 260" class="temp-graph-svg" xmlns="http://www.w3.org/2000/svg">
+    ${gridlines}
+    <line x1="${TG_X0}" y1="${TG_Y0}" x2="${TG_X1}" y2="${TG_Y0}" stroke="#5C6E68" stroke-width="1.5"/>
+    <line x1="${TG_X0}" y1="${TG_Y0}" x2="${TG_X0}" y2="${TG_Y1}" stroke="#5C6E68" stroke-width="1.5"/>
+    <path d="${pathD}" fill="none" stroke="#0E9E90" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    ${xticks}
+    <text x="${(TG_X0+TG_X1)/2}" y="248" font-size="11" fill="#17241F" text-anchor="middle" font-family="Inter, sans-serif">Temperature (°C)</text>
+    <text x="18" y="${(TG_Y0+TG_Y1)/2}" font-size="11" fill="#17241F" text-anchor="middle" font-family="Inter, sans-serif" transform="rotate(-90 18,${(TG_Y0+TG_Y1)/2})">Rate of Reaction</text>
+    ${marker}
+  </svg>`;
+}
+
+/* ============ pH graph-PLOTTING engine — blank grid, students tap to place each point ============ */
+const PHG_XMIN=0, PHG_XMAX=14, PHG_YMIN=0, PHG_YMAX=100;
+const PHG_X0=55, PHG_X1=460, PHG_Y0=215, PHG_Y1=25;
+const PHG_VIEWW=500, PHG_VIEWH=260;
+function phgX(ph){ return PHG_X0 + (ph-PHG_XMIN)/(PHG_XMAX-PHG_XMIN)*(PHG_X1-PHG_X0); }
+function phgY(rate, yMax){ yMax=yMax||PHG_YMAX; return PHG_Y0 - (rate-PHG_YMIN)/(yMax-PHG_YMIN)*(PHG_Y0-PHG_Y1); }
+function phgInvX(vx){ return PHG_XMIN + (vx-PHG_X0)/(PHG_X1-PHG_X0)*(PHG_XMAX-PHG_XMIN); }
+function phgInvY(vy, yMax){ yMax=yMax||PHG_YMAX; return PHG_YMIN + (PHG_Y0-vy)/(PHG_Y0-PHG_Y1)*(yMax-PHG_YMIN); }
+function buildPHGraphSVG(item, st){
+  const yMax = st.yScale || PHG_YMAX;
+  const placed = st.placed || [];
+  const yFracs = [0,0.25,0.5,0.75,1];
+  const gridV = yFracs.map(f=>`<line x1="${PHG_X0}" y1="${phgY(f*yMax,yMax)}" x2="${PHG_X1}" y2="${phgY(f*yMax,yMax)}" stroke="#D6E2DF" stroke-width="1"/>`).join("");
+  const yLabels = yFracs.map(f=>`<text x="${PHG_X0-10}" y="${phgY(f*yMax,yMax)+4}" font-size="10" fill="#5C6E68" text-anchor="end" font-family="JetBrains Mono, monospace">${Math.round(f*yMax)}</text>`).join("");
+  const phTicks = [0,2,4,6,7,8,10,12,14];
+  const gridH = phTicks.map(ph=>`<line x1="${phgX(ph)}" y1="${PHG_Y0}" x2="${phgX(ph)}" y2="${PHG_Y1}" stroke="#EDF2F1" stroke-width="1"/>`).join("");
+  const xticks = phTicks.map(ph=>`<text x="${phgX(ph)}" y="${PHG_Y0+18}" font-size="10" fill="#5C6E68" text-anchor="middle" font-family="JetBrains Mono, monospace">${ph}</text>`).join("");
+  const orderedPlaced = placed.slice().sort((a,b)=>item.dataPoints[a][0]-item.dataPoints[b][0]);
+  let lineD="";
+  orderedPlaced.forEach((idx,i)=>{ const [ph,rate]=item.dataPoints[idx]; lineD += (i===0?"M":"L")+phgX(ph).toFixed(1)+","+phgY(rate,yMax).toFixed(1)+" "; });
+  const line = orderedPlaced.length>1 ? `<path d="${lineD.trim()}" fill="none" stroke="#0E9E90" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>` : "";
+  const dots = placed.map(idx=>{ const [ph,rate]=item.dataPoints[idx]; return `<circle cx="${phgX(ph)}" cy="${phgY(rate,yMax)}" r="7" fill="#7C5CD9" stroke="#fff" stroke-width="2"/>`; }).join("");
+  let missMarker = "";
+  if(st.missFlash) missMarker = `<circle cx="${phgX(st.missFlash.x).toFixed(1)}" cy="${phgY(st.missFlash.y,yMax).toFixed(1)}" r="10" fill="none" stroke="#D94F3D" stroke-width="2.5"/>`;
+  return `<svg viewBox="0 0 ${PHG_VIEWW} ${PHG_VIEWH}" class="temp-graph-svg graphplot-svg" id="phgraph-${item.id}" data-item="${item.id}" xmlns="http://www.w3.org/2000/svg">
+    ${gridH}${gridV}
+    <line x1="${PHG_X0}" y1="${PHG_Y0}" x2="${PHG_X1}" y2="${PHG_Y0}" stroke="#5C6E68" stroke-width="1.5"/>
+    <line x1="${PHG_X0}" y1="${PHG_Y0}" x2="${PHG_X0}" y2="${PHG_Y1}" stroke="#5C6E68" stroke-width="1.5"/>
+    ${line}${dots}${missMarker}
+    ${xticks}${yLabels}
+    <text x="${(PHG_X0+PHG_X1)/2}" y="248" font-size="11" fill="#17241F" text-anchor="middle" font-family="Inter, sans-serif">pH</text>
+    <text x="14" y="${(PHG_Y0+PHG_Y1)/2}" font-size="11" fill="#17241F" text-anchor="middle" font-family="Inter, sans-serif" transform="rotate(-90 14,${(PHG_Y0+PHG_Y1)/2})">Rate of Reaction</text>
+  </svg>`;
+}
+function handlePHGraphClick(item, st, evt){
+  const svg = evt.currentTarget;
+  const yMax = st.yScale || PHG_YMAX;
+  const rect = svg.getBoundingClientRect();
+  const px = evt.clientX - rect.left, py = evt.clientY - rect.top;
+  const vx = px/rect.width*PHG_VIEWW, vy = py/rect.height*PHG_VIEWH;
+  const dataPh = phgInvX(vx), dataRate = phgInvY(vy, yMax);
+  if(!st.placed) st.placed=[];
+  let best=null, bestDist=Infinity;
+  item.dataPoints.forEach((p,i)=>{
+    if(st.placed.includes(i)) return;
+    const dx=(dataPh-p[0])/item.tolerance.ph, dy=(dataRate-p[1])/item.tolerance.rate;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if(dist<bestDist){ bestDist=dist; best=i; }
+  });
+  touchActivity();
+  if(best!==null && bestDist<=1){
+    st.placed.push(best); st.missFlash=null;
+    playTone("ok");
+    if(st.placed.length===item.dataPoints.length) markCorrect(item,10);
+    rerenderItem(item);
+  } else {
+    playTone("bad");
+    st.missFlash={x:dataPh, y:dataRate};
+    rerenderItem(item);
+    setTimeout(()=>{ st.missFlash=null; rerenderItem(item); }, 500);
+  }
+}
+
+/* ============ 3D interactive diagram engine (CSS 3D transforms, drag-to-rotate) ============
+   Molecules are laid out as flat rigid structures (all bond math stays simple 2D trig),
+   then the whole rigid group is rotated in true 3D via rotateX/rotateY — this keeps every
+   bond correctly attached to its atoms at any rotation angle, with no risk of misaligned rods. */
+const M3D_COL = { C:"#5C6E68", O:"#D94F3D", N:"#0E9E90", H:"#B7C4C0", R:"#7C5CD9", E:"#7C5CD9", S:"#0E9E90" };
+
+function m3d_ring(cx,cy,colors,radius,puff){
+  radius=radius||34; puff=puff===undefined?9:puff;
+  const atoms=[],bonds=[];
+  for(let i=0;i<6;i++){
+    const ang=-Math.PI/2+i*Math.PI/3;
+    atoms.push({x:cx+radius*Math.cos(ang), y:cy+radius*Math.sin(ang), z:(i%2===0?puff:-puff), r:14, color:colors[i%colors.length]});
+  }
+  for(let i=0;i<6;i++) bonds.push([i,(i+1)%6]);
+  return {atoms,bonds};
+}
+function m3d_chain(x0,y0,n,stepX,stepY,zigzag,color,r){
+  const len=Math.hypot(stepX,stepY)||1, px=-stepY/len, py=stepX/len;
+  const atoms=[],bonds=[];
+  for(let i=0;i<n;i++){
+    const bx=x0+stepX*i, by=y0+stepY*i, sign=(i%2===0)?1:-1;
+    atoms.push({x:bx+px*zigzag*sign, y:by+py*zigzag*sign, z:0, r:r||12, color: typeof color==="function"?color(i):color});
+    if(i>0) bonds.push([i-1,i]);
+  }
+  return {atoms,bonds};
+}
+function m3d_arc(cx,cy,radius,startDeg,endDeg,n,color,r,puff){
+  puff=puff===undefined?9:puff;
+  const atoms=[],bonds=[];
+  for(let i=0;i<n;i++){
+    const t=startDeg+(endDeg-startDeg)*i/(n-1), ang=t*Math.PI/180;
+    atoms.push({x:cx+radius*Math.cos(ang), y:cy+radius*Math.sin(ang), z:(i%2===0?puff:-puff), r:r||13, color});
+    if(i>0) bonds.push([i-1,i]);
+  }
+  return {atoms,bonds};
+}
+function m3d_merge(groups, extraLinks){
+  let atoms=[], bonds=[]; const offsets=[];
+  groups.forEach(g=>{ offsets.push(atoms.length); atoms=atoms.concat(g.atoms); bonds=bonds.concat(g.bonds.map(([a,b])=>[a+offsets[offsets.length-1], b+offsets[offsets.length-1]])); });
+  (extraLinks||[]).forEach(([gi,ai,gj,aj])=>{ bonds.push([offsets[gi]+ai, offsets[gj]+aj]); });
+  return {atoms,bonds};
+}
+
+function buildSugarModel(){
+  const glucose = m3d_ring(-175,0,[M3D_COL.C,M3D_COL.C,M3D_COL.O,M3D_COL.C,M3D_COL.C,M3D_COL.C]);
+  const r1=m3d_ring(-25,0,[M3D_COL.C,M3D_COL.C,M3D_COL.O,M3D_COL.C,M3D_COL.C,M3D_COL.C]);
+  const r2=m3d_ring(65,0,[M3D_COL.C,M3D_COL.C,M3D_COL.O,M3D_COL.C,M3D_COL.C,M3D_COL.C]);
+  const r3=m3d_ring(155,0,[M3D_COL.C,M3D_COL.C,M3D_COL.O,M3D_COL.C,M3D_COL.C,M3D_COL.C]);
+  return m3d_merge([glucose,r1,r2,r3], [[1,0,2,3],[2,0,3,3]]);
+}
+function buildProteinModel(){
+  const amino = { atoms:[
+      {x:-190,y:0,z:0,r:17,color:M3D_COL.C},
+      {x:-238,y:-32,z:0,r:12,color:M3D_COL.N},
+      {x:-142,y:-32,z:0,r:12,color:M3D_COL.O},
+      {x:-190,y:48,z:0,r:12,color:M3D_COL.R},
+      {x:-215,y:32,z:14,r:9,color:M3D_COL.H}
+    ], bonds:[[0,1],[0,2],[0,3],[0,4]] };
+  const backbone = m3d_chain(-70,0,7,45,0,26,(i)=> i%2===0?M3D_COL.C:M3D_COL.N, 12);
+  const stub1={atoms:[{x:backbone.atoms[1].x, y:backbone.atoms[1].y-42, z:0, r:9, color:M3D_COL.R}], bonds:[]};
+  const stub2={atoms:[{x:backbone.atoms[3].x, y:backbone.atoms[3].y-42, z:0, r:9, color:M3D_COL.R}], bonds:[]};
+  const stub3={atoms:[{x:backbone.atoms[5].x, y:backbone.atoms[5].y-42, z:0, r:9, color:M3D_COL.R}], bonds:[]};
+  return m3d_merge([amino,backbone,stub1,stub2,stub3], [[0,0,1,0],[2,0,1,1],[3,0,1,3],[4,0,1,5]]);
+}
+function buildFatModel(){
+  const glycerol={ atoms:[
+      {x:-45,y:-85,z:0,r:14,color:M3D_COL.O},
+      {x:0,y:-85,z:0,r:14,color:M3D_COL.C},
+      {x:45,y:-85,z:0,r:14,color:M3D_COL.O}
+    ], bonds:[[0,1],[1,2]] };
+  const tail0=m3d_chain(-45,-55,6,0,34,17,M3D_COL.C,11);
+  const tail1=m3d_chain(0,-55,6,0,34,17,M3D_COL.C,11);
+  const tail2=m3d_chain(45,-55,6,0,34,17,M3D_COL.C,11);
+  return m3d_merge([glycerol,tail0,tail1,tail2], [[0,0,1,0],[0,1,2,0],[0,2,3,0]]);
+}
+function buildEnzymeModel(){
+  const enzyme = m3d_arc(0,0,78,45,315,12,M3D_COL.E,15,10);
+  const substrate = { atoms:[
+      {x:62,y:0,z:14,r:13,color:M3D_COL.S},
+      {x:86,y:-16,z:-6,r:11,color:M3D_COL.S},
+      {x:86,y:16,z:-6,r:11,color:M3D_COL.S}
+    ], bonds:[[0,1],[1,2],[2,0]] };
+  return m3d_merge([enzyme,substrate]);
+}
+const MOLECULE_PRESETS = {
+  sugar:{ label:"Glucose → Starch", build:buildSugarModel,
+    legend:[["Glucose (single ring)",M3D_COL.C],["Oxygen",M3D_COL.O],["Starch = 3+ glucose rings linked",M3D_COL.C]] },
+  protein:{ label:"Amino Acid → Protein", build:buildProteinModel,
+    legend:[["Backbone carbon",M3D_COL.C],["Nitrogen (amino)",M3D_COL.N],["Oxygen (carboxyl)",M3D_COL.O],["R group (side chain)",M3D_COL.R]] },
+  fat:{ label:"Glycerol + Fatty Acids", build:buildFatModel,
+    legend:[["Glycerol backbone",M3D_COL.O],["Fatty acid tail",M3D_COL.C]] }
+};
+
+function m3dSceneHTML(id, labelText){
+  return `<div class="m3d-scene" id="${id}"><div class="m3d-group" id="${id}-group"></div><div class="m3d-label">${labelText}</div><div class="m3d-hint">🖐 Drag to rotate</div></div>`;
+}
+function m3dLegendHTML(legend){
+  return `<div class="m3d-legend">${legend.map(([l,c])=>`<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
+}
+let m3dActiveIntervals = [];
+function initM3DScene(id, atoms, bonds, opts){
+  opts = opts || {};
+  const scene=document.getElementById(id), group=document.getElementById(id+"-group");
+  if(!scene||!group) return;
+  let html="";
+  bonds.forEach(([ai,bi])=>{
+    const a=atoms[ai], b=atoms[bi];
+    const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)*180/Math.PI, midZ=(a.z+b.z)/2;
+    html += `<div class="m3d-bond" style="width:${len}px; left:${a.x}px; top:${a.y-2.5}px; transform:translateZ(${midZ}px) rotate(${ang}deg);"></div>`;
+  });
+  atoms.forEach(at=>{
+    html += `<div class="m3d-atom" style="width:${at.r*2}px; height:${at.r*2}px; left:${at.x-at.r}px; top:${at.y-at.r}px; transform:translateZ(${at.z}px); background:radial-gradient(circle at 32% 28%, #ffffff, ${at.color} 55%, ${at.color} 100%);"></div>`;
+  });
+  (opts.pins||[]).forEach(p=>{
+    const assignedLabel = opts.assigned && opts.assigned[p.id];
+    const flash = opts.flashPinId===p.id;
+    html += `<div class="m3d-pin ${assignedLabel?"assigned":""} ${flash?"wrongflash":""}" data-pinid="${p.id}" style="left:${p.x-17}px; top:${p.y-17}px; transform:translateZ(${p.z}px);">${assignedLabel?"✓":"?"}<span class="m3d-pin-tag">${assignedLabel||""}</span></div>`;
+  });
+  group.innerHTML = html;
+  if(opts.onPinClick){
+    group.querySelectorAll(".m3d-pin").forEach(pinEl=>{
+      pinEl.onpointerdown = e=>{ e.stopPropagation(); };
+      pinEl.onclick = e=>{ e.stopPropagation(); opts.onPinClick(pinEl.dataset.pinid); };
+    });
+  }
+  if(opts.static){
+    group.style.transform = "rotateX(-10deg) rotateY(18deg)";
+    return;
+  }
+  let rx=-14, ry=22, dragging=false, lastX=0, lastY=0;
+  function apply(){ group.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`; }
+  apply();
+  const idleId = setInterval(()=>{ if(!dragging){ ry+=0.22; apply(); } }, 30);
+  m3dActiveIntervals.push(idleId);
+  scene.onpointerdown = e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; try{scene.setPointerCapture(e.pointerId);}catch(err){} };
+  scene.onpointermove = e=>{ if(!dragging) return; const dx=e.clientX-lastX, dy=e.clientY-lastY; ry+=dx*0.4; rx=Math.max(-70,Math.min(70,rx-dy*0.4)); lastX=e.clientX; lastY=e.clientY; apply(); };
+  scene.onpointerup = ()=>{ dragging=false; };
+  scene.onpointerleave = ()=>{ dragging=false; };
+}
+function buildEnzymeLabelModel(){
+  const enzyme = m3d_arc(-40,0,78,45,315,12,M3D_COL.E,15,10);
+  const substrate = { atoms:[
+      {x:22,y:0,z:14,r:13,color:M3D_COL.S},
+      {x:46,y:-16,z:-6,r:11,color:M3D_COL.S},
+      {x:46,y:16,z:-6,r:11,color:M3D_COL.S}
+    ], bonds:[[0,1],[1,2],[2,0]] };
+  const product = { atoms:[
+      {x:150,y:-14,z:0,r:11,color:"#3F8F2C"},
+      {x:150,y:14,z:0,r:11,color:"#3F8F2C"}
+    ], bonds:[] };
+  const merged = m3d_merge([enzyme,substrate,product]);
+  const pins = [
+    {id:"enzyme", x:-95, y:35, z:9, correctLabel:"Enzyme"},
+    {id:"activesite", x:0, y:0, z:0, correctLabel:"Active Site"},
+    {id:"substrate", x:32, y:0, z:14, correctLabel:"Substrate"},
+    {id:"product", x:150, y:0, z:0, correctLabel:"Product"}
+  ];
+  return {atoms:merged.atoms, bonds:merged.bonds, pins};
+}
+function mountAllM3DScenes(){
+  m3dActiveIntervals.forEach(id=>clearInterval(id));
+  m3dActiveIntervals = [];
+  document.querySelectorAll("[data-m3d-preset]").forEach(el=>{
+    const preset = MOLECULE_PRESETS[el.dataset.m3dPreset];
+    if(!preset) return;
+    const model = preset.build();
+    initM3DScene(el.id, model.atoms, model.bonds);
+  });
+  const enzScene = document.getElementById("m3d-enzyme");
+  if(enzScene){ const m=buildEnzymeModel(); initM3DScene("m3d-enzyme", m.atoms, m.bonds); }
+  const labelScene = document.getElementById("m3d-label");
+  if(labelScene && S.screen==="game" && S.phase==="items"){
+    const item = CHALLENGES[S.chIndex].items.find(it=>it.type==="labeldiagram");
+    if(item){
+      const st = getIS(item.id);
+      const m = buildEnzymeLabelModel();
+      initM3DScene("m3d-label", m.atoms, m.bonds, {
+        pins:m.pins, assigned:st.assign||{}, flashPinId:st.flashPin, static:true,
+        onPinClick:(pinId)=>handleLabelPinClick(item, st, pinId, m.pins)
+      });
+    }
+  }
+  document.querySelectorAll("[data-annotate-model]").forEach(el=>{
+    const key = el.dataset.annotateModel;
+    let m = null;
+    if(key==="sugar") m = buildSugarModel();
+    else if(key==="protein") m = buildProteinModel();
+    else if(key==="fat") m = buildFatModel();
+    else if(key==="enzyme") m = buildEnzymeModel();
+    if(m) initM3DScene(el.id, m.atoms, m.bonds, {static:true});
+  });
+}
+function handleLabelPinClick(item, st, pinId, pins){
+  if(!st.selectedWord) return;
+  if(st.assign && st.assign[pinId]) return;
+  const pin = pins.find(p=>p.id===pinId);
+  st.attempts=(st.attempts||0)+1;
+  if(pin.correctLabel===st.selectedWord){
+    if(!st.assign) st.assign={};
+    st.assign[pinId]=st.selectedWord; st.selectedWord=null; st.flashPin=null;
+    touchActivity(); playTone("ok"); rerenderItem(item);
+  } else {
+    playTone("bad");
+    st.flashPin=pinId; touchActivity(); rerenderItem(item);
+    setTimeout(()=>{ st.flashPin=null; rerenderItem(item); }, 350);
+  }
+}
+
+/* ---------------- state ---------------- */
+let S = {
+  sessionCode:null, offline:false,
+  teamName:"", students:["","","","","",].slice(0,5), teamSlug:"",
+  screen:"join",
+  chIndex:0, itemIndex:0, phase:"recall", // phase: 'recall' | 'items' | 'unlocked'
+  score:0, hintsUsed:0, codes:[],
+  itemState:{}, // per current item: {attempts, hintUsed, done, selected...}
+  log:[],
+  startedAt:null,
+  finished:false, finishedAt:null,
+  lastActivity:Date.now(),
+  meta:{sessionStart:null}
+};
+/* ============ audio cues (Web Audio API — no external files needed) ============ */
+let audioCtx=null;
+function getAudioCtx(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(audioCtx.state==="suspended"){ audioCtx.resume().catch(()=>{}); }
+  return audioCtx;
+}
+function playTone(kind){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  const now = ctx.currentTime;
+  function tone(freq, start, dur, type, peak){
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=type||"sine"; osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0, now+start);
+    gain.gain.linearRampToValueAtTime(peak||0.1, now+start+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now+start+dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now+start); osc.stop(now+start+dur+0.03);
+  }
+  if(kind==="ok"){ tone(880,0,0.12,"sine",0.09); tone(1180,0.08,0.14,"sine",0.08); }
+  else if(kind==="bad"){ tone(180,0,0.18,"sawtooth",0.07); }
+  else if(kind==="hint"){ tone(520,0,0.08,"sine",0.05); }
+  else if(kind==="unlock"){ tone(660,0,0.1,"sine",0.09); tone(880,0.1,0.1,"sine",0.09); tone(1180,0.2,0.2,"sine",0.1); }
+  else if(kind==="escape"){ tone(660,0,0.1,"triangle",0.09); tone(880,0.1,0.1,"triangle",0.09); tone(1100,0.2,0.1,"triangle",0.09); tone(1320,0.3,0.24,"triangle",0.11); }
+  else if(kind==="attention"){ tone(440,0,0.16,"square",0.09); tone(440,0.28,0.16,"square",0.09); tone(440,0.56,0.16,"square",0.09); }
+}
+
+/* ============ confetti burst — visual "wow" for challenge unlocks & final escape ============ */
+const CONFETTI_COLORS = ["#0E9E90","#C97A12","#D94F3D","#3F8F2C","#7C5CD9","#5FE9DB"];
+function spawnConfetti(count){
+  const layer = document.getElementById("confetti-layer");
+  if(!layer) return;
+  count = count || 36;
+  for(let i=0;i<count;i++){
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    const x = Math.random()*100;
+    const drift = (Math.random()*2-1)*80;
+    const rot = Math.random()*720-360;
+    const dur = 1.1 + Math.random()*0.9;
+    const delay = Math.random()*0.25;
+    const color = CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)];
+    const shape = Math.random()<0.5 ? "50%" : "3px";
+    el.style.cssText = `left:${x}%; background:${color}; border-radius:${shape}; animation-duration:${dur}s; animation-delay:${delay}s; --drift:${drift}px; --rot:${rot}deg;`;
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), (dur+delay)*1000+200);
+  }
+}
+
+let joinCodeInput = "";
+let saveTimer=null, pollTimer=null, tickTimer=null;
+let recallM3DPreset = "sugar";
+
+function slug(s){return (s||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")||"team";}
+
+/* ---------------- storage helpers ---------------- */
+async function saveState(){
+  if(S.offline || !S.sessionCode) return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async ()=>{
+    const curCh = CHALLENGES[S.chIndex];
+    const curChDone = curCh ? curCh.items.filter(it=>getIS(it.id).done).length : 0;
+    const completedItems = CHALLENGES.slice(0,S.chIndex).reduce((s,c)=>s+c.items.length,0) + curChDone;
+    const payload = {
+      teamName:S.teamName, students:S.students, chIndex:S.chIndex, itemIndex:curChDone,
+      totalItems:TOTAL_ITEMS, completedItems, progressPercent:Math.round(completedItems/TOTAL_ITEMS*100),
+      currentChallengeTitle: curCh ? curCh.title : "Escaped",
+      score:S.score, hintsUsed:S.hintsUsed, codes:S.codes,
+      startedAt:S.startedAt, lastActivity:Date.now(), finished:S.finished, finishedAt:S.finishedAt,
+      log:S.log.slice(-40)
+    };
+    try{ await SYNC.set(`er:${S.sessionCode}:team:${S.teamSlug}`, JSON.stringify(payload)); }catch(e){ console.warn("save failed",e); }
+  }, 250);
+}
+async function touchActivity(){
+  S.lastActivity=Date.now();
+}
+let lastAttentionActive = false;
+async function pollMeta(){
+  if(S.offline || !S.sessionCode) return;
+  try{
+    const r = await SYNC.get(`er:${S.sessionCode}:meta`);
+    if(r && r.value){
+      const m = JSON.parse(r.value);
+      S.meta = m;
+    }
+  }catch(e){ /* not created yet */ }
+  try{
+    const a = await SYNC.get(`er:${S.sessionCode}:attention`);
+    if(a && a.value){
+      const parsed = JSON.parse(a.value);
+      renderAttentionOverlay(!!parsed.active, parsed.message);
+    } else {
+      renderAttentionOverlay(false);
+    }
+  }catch(e){ renderAttentionOverlay(false); }
+  renderHUD();
+}
+function renderAttentionOverlay(active, message){
+  let el = document.getElementById("attention-overlay");
+  if(active){
+    if(!lastAttentionActive) playTone("attention");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "attention-overlay";
+      el.className = "attention-overlay";
+      document.body.appendChild(el);
+    }
+    el.innerHTML = `<div class="attention-content"><div class="attention-icon">🔔</div><div class="attention-text">Please give your attention to<br><span>${message||"your teacher"}</span></div></div>`;
+  } else if(el){
+    el.remove();
+  }
+  lastAttentionActive = active;
+}
+
+/* ---------------- render root ---------------- */
+function render(){
+  const app = document.getElementById("studentApp");
+  document.getElementById("hud").style.display = (S.screen==="game")? "flex":"none";
+  if(S.screen==="join") app.innerHTML = screenJoin();
+  else if(S.screen==="brief") app.innerHTML = screenBrief();
+  else if(S.screen==="teamsetup") app.innerHTML = screenTeamSetup();
+  else if(S.screen==="game"){ app.innerHTML = screenGame(); renderHUD(); }
+  else if(S.screen==="escaped") app.innerHTML = screenEscaped();
+  bindEvents();
+  if((S.screen==="game" && S.phase==="unlocked") || S.screen==="escaped"){
+    setTimeout(()=>spawnConfetti(S.screen==="escaped"?60:36), 60);
+  }
+}
+
+/* ---------------- screens ---------------- */
+function screenJoin(){
+  return `
+  <div class="stage"><div class="card">
+    <div class="slide-tab">Bio-Lab · Access Terminal</div>
+    <div class="eyebrow">Sec 3 Biology Escape Room</div>
+    <h1 class="title">Enter the session code</h1>
+    <p class="lead">Ask your teacher for today's 4-character session code, shown on the classroom panel.</p>
+    <label class="field-label">Session code</label>
+    <input type="text" id="in-code" maxlength="6" placeholder="e.g. B7XQ" style="text-transform:uppercase; font-family:var(--mono); letter-spacing:0.2em; font-size:20px;" value="${joinCodeInput}">
+    <div class="row" style="margin-top:8px;">
+      <button class="btn btn-primary" id="btn-join">Join Session →</button>
+      <button class="btn btn-ghost" id="btn-practice">⚡ Practice Solo (no teacher needed)</button>
+    </div>
+  </div></div>`;
+}
+function screenBrief(){
+  return `
+  <div class="stage"><div class="card">
+    <div class="slide-tab">Incoming Transmission</div>
+    <div class="eyebrow">Mission Briefing</div>
+    <h1 class="title">The Bio-Lab has been locked down.</h1>
+    <p class="lead">A mystery sample has triggered the lab's security system. Your team has <strong style="color:var(--cyan)">30 minutes</strong> to investigate the samples, solve the Biology challenges, unlock the security codes, and escape before the lab seals permanently.</p>
+    <ul class="rules">
+      <li><span class="ico">01</span> Work as a team of 5 — everyone must contribute.</li>
+      <li><span class="ico">02</span> You have 30 minutes once the lesson begins.</li>
+      <li><span class="ico">03</span> Complete the challenges in order — no skipping ahead.</li>
+      <li><span class="ico">04</span> Before each challenge, you'll sketch and discuss as a team first — everyone contributes before an answer goes in.</li>
+      <li><span class="ico">05</span> Hints are available, but each one costs a few points.</li>
+      <li><span class="ico">06</span> Your team wins when you unlock the Final Escape.</li>
+    </ul>
+    <button class="btn btn-primary btn-block" id="btn-to-setup">We're ready — set up our team →</button>
+  </div></div>`;
+}
+function screenTeamSetup(){
+  // 4 active roles shared across up to 5 students — students type their name straight into their role
+  const roleBlocks = ROLES.map((role,ri)=>{
+    const slots = [];
+    for(let i=0;i<S.students.length;i++) if(i%ROLES.length===ri) slots.push(i);
+    const inputs = slots.map(si=>`<input type="text" class="stu-input" data-i="${si}" placeholder="Name" value="${(S.students[si]||"").replace(/"/g,'&quot;')}">`).join("");
+    return `<div class="role-card role-fill">
+      <div class="role-name">${role.name}</div>
+      <div class="role-desc">${role.desc}</div>
+      ${inputs}
+    </div>`;
+  }).join("");
+  const shared = S.students.length > ROLES.length;
+  return `
+  <div class="stage"><div class="card">
+    <div class="slide-tab">Team Registration</div>
+    <div class="eyebrow">${S.teamName || "Your team"}</div>
+    <h1 class="title">Fill in your names under your role</h1>
+    <label class="field-label">Team name</label>
+    <input type="text" id="in-teamname" placeholder="e.g. The Enzyme Avengers" value="${S.teamName.replace(/"/g,'&quot;')}">
+    <p class="lead" style="margin:14px 0 4px;">${shared?"With 5 teammates and 4 jobs, one role is shared — type both names in that box.":""} There's no Timekeeper — the lab's own clock at the top of your screen tracks time for the whole team. Everyone still discusses every major answer; these roles just keep the team organised.</p>
+    <div class="role-grid">${roleBlocks}</div>
+    ${S.meta.sessionStart ? "" : `<div class="waiting-banner">⏳ Waiting for your teacher to start the lesson clock — you can still explore Challenge 1 while you wait.</div>`}
+    <div class="row" style="margin-top:6px;">
+      <button class="btn btn-primary btn-block" id="btn-begin">Begin Mission →</button>
+    </div>
+    <button class="tiny-link" id="btn-quickfill" style="margin-top:14px;">Quick-fill (testing)</button>
+  </div></div>`;
+}
+function screenGame(){
+  const ch = CHALLENGES[S.chIndex];
+  if(S.phase==="recall" && ch.recall) return screenChallengeRecall(ch);
+  if(S.phase==="unlocked") return screenUnlocked(ch);
+  const doneCount = ch.items.filter(it=>getIS(it.id).done).length;
+  const itemsHtml = ch.items.map(item=>`<div id="item-slot-${item.id}">${renderItem(item)}</div>`).join("");
+  return `<div id="game-wrap">
+    ${!S.meta.sessionStart && !S.offline ? `<div class="waiting-banner">⏳ Timer will start as soon as your teacher begins the lesson. Keep working — your progress is saved!</div>` : ""}
+    <div class="ch-header">
+      <div class="ch-icon">${ch.icon}</div>
+      <div><h2 class="ch-title">${ch.title}</h2><div class="ch-sub">${ch.items.length} questions on this page — work through them together</div></div>
+    </div>
+    ${(!ch.recall) ? `<div class="item-card"><div class="item-kicker">Briefing</div><p class="prompt">${ch.intro}</p></div>` : ""}
+    <div id="items-wrap">${itemsHtml}</div>
+    <div id="challenge-complete-bar">${challengeCompleteBarHTML(ch)}</div>
+  </div>`;
+}
+function challengeCompleteBarHTML(ch){
+  const doneCount = ch.items.filter(it=>getIS(it.id).done).length;
+  const allDone = doneCount===ch.items.length;
+  const isFinale = ch.key==="finale";
+  if(allDone){
+    return `<button class="btn btn-primary btn-block" id="btn-unlock-chamber">${isFinale?"🚪 Step outside →":"🔓 Unlock This Chamber →"}</button>`;
+  }
+  return `<div class="progress-hint">Complete all questions above to unlock this chamber — ${doneCount}/${ch.items.length} done.</div>`;
+}
+function updateChallengeCompleteBar(){
+  const bar = document.getElementById("challenge-complete-bar");
+  if(!bar || S.screen!=="game" || S.phase!=="items") return;
+  const ch = CHALLENGES[S.chIndex];
+  bar.innerHTML = challengeCompleteBarHTML(ch);
+  const btn = document.getElementById("btn-unlock-chamber");
+  if(btn) btn.onclick = ()=>finishChallenge();
+}
+function finishChallenge(){
+  const ch = CHALLENGES[S.chIndex];
+  if(ch.code) S.codes.push(ch.code);
+  S.phase="unlocked";
+  playTone("unlock");
+  saveState(); render();
+}
+function screenChallengeRecall(ch){
+  const r = ch.recall;
+  const qs = r.questions.map(q=>`<li>${q}</li>`).join("");
+  let m3dBlock = "";
+  if(r.model3d==="multi"){
+    const preset = MOLECULE_PRESETS[recallM3DPreset];
+    const tabs = Object.entries(MOLECULE_PRESETS).map(([k,p])=>`<button class="m3d-tab ${recallM3DPreset===k?"active":""}" data-m3dtab="${k}">${p.label}</button>`).join("");
+    m3dBlock = `<div class="m3d-tabs">${tabs}</div>
+      <div class="m3d-scene" id="m3d-${recallM3DPreset}" data-m3d-preset="${recallM3DPreset}"><div class="m3d-group" id="m3d-${recallM3DPreset}-group"></div><div class="m3d-label">${preset.label}</div><div class="m3d-hint">🖐 Drag to rotate</div></div>
+      ${m3dLegendHTML(preset.legend)}`;
+  } else if(r.model3d==="enzyme"){
+    m3dBlock = `<div class="m3d-scene" id="m3d-enzyme"><div class="m3d-group" id="m3d-enzyme-group"></div><div class="m3d-label">Enzyme + active site + substrate</div><div class="m3d-hint">🖐 Drag to rotate</div></div>
+      ${m3dLegendHTML([["Enzyme (with active site notch)",M3D_COL.E],["Substrate",M3D_COL.S]])}`;
+  }
+  const canvasBlock = r.canvas ? `
+    <div class="canvas-toolbar">
+      <button class="tool-btn active" data-tool="pen">✏️ Pen</button>
+      <button class="tool-btn" data-tool="eraser">🧹 Eraser</button>
+      <button class="tool-btn" data-tool="text">🔤 Label</button>
+      <button class="tool-btn" data-cvundo="1">↺ Undo</button>
+      <button class="tool-btn" data-cvclear="1">🗑 Clear</button>
+    </div>
+    <canvas id="draw-canvas"></canvas>` : "";
+  return `<div id="game-wrap">
+    ${!S.meta.sessionStart && !S.offline ? `<div class="waiting-banner">⏳ Timer will start as soon as your teacher begins the lesson. Keep working — your progress is saved!</div>` : ""}
+    <div class="ch-header"><div class="ch-icon">${ch.icon}</div><div><h2 class="ch-title">${ch.title}</h2><div class="ch-sub">Recall & discuss — before you start</div></div></div>
+    <div class="item-card">
+      <div class="item-kicker">🖍 Team briefing</div>
+      <p class="prompt">${ch.intro}</p>
+      <p class="prompt">${r.prompt}</p>
+      ${m3dBlock}
+      ${canvasBlock}
+      <div class="discuss-box"><div class="discuss-title">💬 Talk it through as a team:</div><ul class="discuss-list">${qs}</ul></div>
+      <div class="item-actions"><button class="btn btn-primary" data-recallready="1">✅ We've discussed it — start the challenge</button></div>
+    </div>
+  </div>`;
+}
+function screenUnlocked(ch){
+  const isFinale = ch.key==="finale";
+  return `<div id="game-wrap"><div class="unlock-card">
+    <div id="confetti-layer" class="confetti-layer"></div>
+    <div class="unlock-icon">${isFinale?"🚪":"🔓"}</div>
+    <div class="eyebrow" style="color:var(--lime);">${isFinale?"Exit Unsealed":"Challenge Complete"}</div>
+    <h2 class="ch-title">${ch.title} — cleared!</h2>
+    ${ch.code ? `<p class="lead">Override digit acquired:</p><div class="unlock-digit">${ch.code}</div>` : `<p class="lead">${isFinale?"The exit door is unsealing…":"The chamber ahead is unsealing…"}</p>`}
+    <button class="btn btn-primary btn-block" id="btn-continue-ch">${isFinale?"Step outside →":"Continue →"}</button>
+  </div></div>`;
+}
+function screenEscaped(){
+  const secs = S.finishedAt && S.startedAt ? Math.round((S.finishedAt-S.startedAt)/1000) : 0;
+  const mm = Math.floor(secs/60), ss = String(secs%60).padStart(2,"0");
+  return `
+  <div class="stage"><div class="card escaped-card" style="text-align:center;">
+    <div id="confetti-layer" class="confetti-layer"></div>
+    <div class="slide-tab" style="left:50%; transform:translateX(-50%);">Lab Systems Online</div>
+    <div class="escaped-icon">🔓✅</div>
+    <h1 class="title" style="color:var(--lime);">ESCAPED!</h1>
+    <p class="lead">${S.teamName || "Your team"} has cleared the Bio-Lab lockdown.</p>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="num">${S.score}</div><div class="lbl">Score</div></div>
+      <div class="stat-box"><div class="num">${mm}:${ss}</div><div class="lbl">Time Taken</div></div>
+      <div class="stat-box"><div class="num">${S.hintsUsed}</div><div class="lbl">Hints Used</div></div>
+      <div class="stat-box"><div class="num">6/6</div><div class="lbl">Challenges</div></div>
+    </div>
+    <p style="color:var(--muted); font-size:13px;">Great teamwork — wait for your teacher's debrief on today's tricky questions.</p>
+  </div></div>`;
+}
+
+/* ---------------- HUD ---------------- */
+function renderHUD(){
+  const hud = document.getElementById("hud");
+  const curChDone = CHALLENGES[S.chIndex] ? CHALLENGES[S.chIndex].items.filter(it=>getIS(it.id).done).length : 0;
+  const completed = CHALLENGES.slice(0,S.chIndex).reduce((s,c)=>s+c.items.length,0) + curChDone;
+  const pct = Math.round(completed/TOTAL_ITEMS*100);
+  let remain = null, cls="";
+  if(S.meta && S.meta.sessionStart){
+    const elapsed = (Date.now()-S.meta.sessionStart)/1000;
+    remain = Math.max(0, Math.round(LESSON_SECONDS-elapsed));
+    if(remain<=60) cls="warn-1"; else if(remain<=300) cls="warn-5"; else if(remain<=600) cls="warn-10"; else if(remain<=900) cls="warn-15";
+  }
+  const timeStr = remain===null ? "--:--" : `${String(Math.floor(remain/60)).padStart(2,"0")}:${String(remain%60).padStart(2,"0")}`;
+  const codeTokens = CHALLENGES.filter(c=>c.code).map((c,i)=>{
+    const got = S.codes[i]!==undefined;
+    return `<div class="code-token ${got?"got":""}">${got? c.code : "?"}</div>`;
+  }).join("");
+  const totalLocks = CHALLENGES.filter(c=>c.code).length;
+  const labStatus = S.finished ? "🟢 ALL SYSTEMS UNLOCKED" : (S.codes.length===0 ? "🔴 LAB LOCKED" : `🟡 ${S.codes.length}/${totalLocks} SYSTEMS UNLOCKED`);
+  hud.innerHTML = `
+    <div class="hud-block" id="timer-block">
+      <span class="hud-label">Lab Lockdown Timer</span>
+      <span id="timer-digits" class="mono ${cls}">${timeStr}</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">${CHALLENGES[S.chIndex]?CHALLENGES[S.chIndex].title.split("· ")[1]:"Escape"} — ${pct}%</span>
+      <div class="vial"><div class="vial-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">Score</span>
+      <span class="hud-value" style="color:var(--lime)">${S.score}</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">Hints Used</span>
+      <span class="hud-value" style="color:var(--amber)">${S.hintsUsed}</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-label">Override Codes</span>
+      <div class="codes-row">${codeTokens}</div>
+    </div>
+    <div class="hud-block"><span class="lab-status">${labStatus}</span></div>`;
+}
+
+/* ---------------- item engine ---------------- */
+function getIS(id){ if(!S.itemState[id]) S.itemState[id]={attempts:0, hintUsed:false, hintOpen:false, done:false, selected:null, pairs:{}, order:[], text:"", canvasReady:false, tube:null, test:null, results:{}, shapePicked:null, keyEntered:[]}; return S.itemState[id]; }
+
+function pointsFor(base){ return base; }
+
+function markCorrect(item, base=10){
+  const st=getIS(item.id);
+  if(st.done) return;
+  st.done=true;
+  let pts=base - (st.hintUsed?3:0) - Math.max(0,st.attempts-1)*2;
+  pts=Math.max(2,pts);
+  S.score+=pts;
+  S.log.push({id:item.id, type:item.type, correct:true, attempts:st.attempts+1, hint:st.hintUsed, ts:Date.now()});
+  playTone("ok");
+  touchActivity(); saveState();
+}
+function useHint(item){
+  const st=getIS(item.id);
+  st.hintOpen=true;
+  if(!st.hintUsed){ st.hintUsed=true; S.hintsUsed++; }
+  playTone("hint");
+  touchActivity(); saveState(); rerenderItem(item);
+}
+function continueAfterUnlock(){
+  S.chIndex++; S.itemIndex=0;
+  if(S.chIndex>=CHALLENGES.length){
+    S.finished=true; S.finishedAt=Date.now(); S.screen="escaped"; playTone("escape");
+    saveState(); render(); return;
+  }
+  const nextCh = CHALLENGES[S.chIndex];
+  S.phase = nextCh.recall ? "recall" : "items";
+  saveState(); render();
+}
+function rerenderItem(item){
+  const slot = document.getElementById("item-slot-"+item.id);
+  if(slot) slot.innerHTML = renderItem(item);
+  bindEvents();
+  updateChallengeCompleteBar();
+  saveState();
+}
+
+function renderItem(item){
+  const st=getIS(item.id);
+  const hintBtn = (item.hint && !st.done) ? `<button class="btn btn-ghost" data-hint="${item.id}">💡 Use a hint</button>` : "";
+  const hintBox = st.hintOpen ? `<div class="hint-box">💡 ${item.hint}</div>` : "";
+  if(item.type==="mcq") return itemMCQ(item, st, hintBtn, hintBox);
+  if(item.type==="matching") return itemMatching(item, st, hintBtn, hintBox);
+  if(item.type==="order") return itemOrder(item, st, hintBtn, hintBox);
+  if(item.type==="shortanswer") return itemShortAnswer(item, st, hintBtn, hintBox);
+  if(item.type==="canvas") return itemCanvas(item, st);
+  if(item.type==="foodtest") return itemFoodTest(item, st);
+  if(item.type==="enzymefit") return itemEnzymeFit(item, st);
+  if(item.type==="labeldiagram") return itemLabelDiagram(item, st, hintBtn, hintBox);
+  if(item.type==="graphread") return itemGraphRead(item, st, hintBtn, hintBox);
+  if(item.type==="graphplot") return itemGraphPlot(item, st, hintBtn, hintBox);
+  if(item.type==="annotate") return itemAnnotate(item, st);
+  if(item.type==="finallock") return itemFinalLock(item, st);
+  return "";
+}
+
+function itemMCQ(item, st, hintBtn, hintBox){
+  const opts = item.options.map((o,i)=>{
+    let cls="opt";
+    if(st.done){ if(i===item.correct) cls+=" correct"; else if(i===st.selected) cls+=" wrong"; }
+    else if(i===st.selected) cls+=" selected";
+    return `<button class="${cls}" data-mcq="${item.id}" data-i="${i}" ${st.done?"disabled":""}>${String.fromCharCode(65+i)}.  ${o}</button>`;
+  }).join("");
+  const fb = st.done ? `<div class="feedback ok">✅ ${item.fbCorrect}</div>` :
+    (st.selected!==null && st.wrongFlash ? `<div class="feedback bad"><span class="access-denied">⚠ Access Denied</span>${item.fbWrong}</div>` : "");
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">Multiple choice ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="opt-list">${opts}</div>
+    ${fb}${!st.done?hintBox:""}
+    <div class="item-actions">
+      ${!st.done ? `<button class="btn btn-primary" data-check="${item.id}" ${st.selected===null?"disabled":""}>Check Answer</button>` : ""}
+      ${!st.done?hintBtn:""}
+    </div></div>`;
+}
+function itemMatching(item, st, hintBtn, hintBox){
+  const left = item.left.map((l,i)=>`<div class="match-item ${st.selectedLeft===i?"selected":""} ${st.pairs[i]!==undefined?"paired":""}" data-mleft="${i}" data-item="${item.id}">${l}</div>`).join("");
+  const right = item.right.map((r,i)=>`<div class="match-item ${Object.values(st.pairs).includes(i)?"paired":""}" data-mright="${i}" data-item="${item.id}">${r}</div>`).join("");
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">Match the pairs — tap one on each side ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="match-wrap">
+      <div><div class="match-col-label">Term</div>${left}</div>
+      <div><div class="match-col-label">Description</div>${right}</div>
+    </div>
+    ${st.done?`<div class="feedback ok">✅ All pairs matched correctly — great teamwork.</div>`:""}
+    ${!st.done?hintBox:""}
+    <div class="item-actions">
+      ${!st.done?hintBtn:""}
+    </div></div>`;
+}
+function itemOrder(item, st, hintBtn, hintBox){
+  if(st.pool===undefined){ st.pool = item.steps.map((s,i)=>i).sort(()=>Math.random()-0.5); st.order=[]; }
+  const poolHtml = st.pool.filter(i=>!st.order.includes(i)).map(i=>`<button class="opt" data-ord="${i}" data-item="${item.id}">${item.steps[i]}</button>`).join("");
+  const placedHtml = st.order.map((i,pos)=>`<div class="order-item placed"><div class="order-num">${pos+1}</div>${item.steps[i]}</div>`).join("");
+  const done = st.order.length===item.steps.length;
+  let correct = done && st.order.every((v,i)=>v===i);
+  if(done && !st.checked){ st.checked=true; if(correct){ markCorrect(item);} }
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">Tap the steps in the correct order ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="order-list">${placedHtml}</div>
+    ${!done?`<div class="opt-list" style="margin-top:10px;">${poolHtml}</div>`:""}
+    ${done && correct ? `<div class="feedback ok">✅ Correct sequence!</div>` : ""}
+    ${done && !correct ? `<div class="feedback bad">✗ Not quite the right order — tap reset and try again.</div>` : ""}
+    ${!done?hintBox:""}
+    <div class="item-actions">
+      ${done && !correct ? `<button class="btn btn-ghost" data-ordreset="${item.id}">↺ Reset order</button>` : ""}
+      ${!done?hintBtn:""}
+    </div></div>`;
+}
+function itemShortAnswer(item, st, hintBtn, hintBox){
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">Short answer — discuss, then type your team's answer ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <textarea id="ta-${item.id}" placeholder="Type your team's answer here..." ${st.done?"disabled":""}>${st.text}</textarea>
+    ${st.done ? `<div class="feedback ok">✅ ${item.fbCorrect}<br><br><em>Model answer:</em> ${item.modelAnswer}</div>` : (st.checked ? `<div class="feedback bad">${item.fbTry}</div>` : "")}
+    ${!st.done?hintBox:""}
+    <div class="item-actions">
+      ${!st.done ? `<button class="btn btn-primary" data-check="${item.id}">Submit Answer</button>` : ""}
+      ${!st.done?hintBtn:""}
+    </div></div>`;
+}
+function testTubesSVG(){
+  return `<svg viewBox="0 0 300 130" class="testtubes-svg" xmlns="http://www.w3.org/2000/svg">
+    ${[60,150,240].map((cx,i)=>`
+      <rect x="${cx-15}" y="18" width="30" height="88" rx="9" fill="#EDF2F1" stroke="#5C6E68" stroke-width="2"/>
+      <line x1="${cx-15}" y1="46" x2="${cx+15}" y2="46" stroke="#5C6E68" stroke-width="1.5"/>
+      <text x="${cx}" y="122" font-size="11" fill="#5C6E68" text-anchor="middle" font-family="Inter, sans-serif">Sample ${String.fromCharCode(88+i)}?</text>
+    `).join("")}
+  </svg>`;
+}
+function itemAnnotate(item, st){
+  if(st.done){
+    return `<div class="item-card solved">
+      <div class="item-kicker">✍️ Annotate & write <span class="solved-badge">✅ Submitted</span></div>
+      <p class="prompt">${item.prompt}</p>
+      <div class="feedback ok">✅ Your team's annotation has been noted — nice work capturing your thinking!</div>
+    </div>`;
+  }
+  let diagramBlock = "";
+  if(item.diagram){
+    if(item.diagram.model==="testtubes"){
+      diagramBlock = `<div class="annotate-diagram-wrap">${testTubesSVG()}</div><p class="annotate-caption">${item.diagram.caption}</p>`;
+    } else {
+      diagramBlock = `<div class="m3d-scene annotate-diagram-scene" id="m3d-annotate-${item.id}" data-annotate-model="${item.diagram.model}"><div class="m3d-group" id="m3d-annotate-${item.id}-group"></div></div><p class="annotate-caption">${item.diagram.caption}</p>`;
+    }
+  }
+  return `<div class="item-card">
+    <div class="item-kicker">✍️ Annotate & write — put it in your own words</div>
+    <p class="prompt">${item.prompt}</p>
+    ${diagramBlock}
+    <div class="canvas-toolbar">
+      <button class="tool-btn active" data-tool="pen">✏️ Pen</button>
+      <button class="tool-btn" data-tool="eraser">🧹 Eraser</button>
+      <button class="tool-btn" data-tool="text">🔤 Type a label</button>
+      <button class="tool-btn" data-cvundo="1">↺ Undo</button>
+      <button class="tool-btn" data-cvclear="1">🗑 Clear</button>
+    </div>
+    <canvas id="draw-canvas"></canvas>
+    <div class="item-actions"><button class="btn btn-primary" data-annotateready="${item.id}">✅ We've annotated it — Done</button></div>
+  </div>`;
+}
+function itemGraphPlot(item, st, hintBtn, hintBox){
+  if(!st.placed) st.placed=[];
+  const maxData = Math.max(...item.dataPoints.map(p=>p[1]));
+  if(!st.yScale){
+    let fb = st.yScaleError ? `<div class="feedback bad"><span class="access-denied">⚠ Access Denied</span>${st.yScaleError}</div>` : "";
+    return `<div class="item-card">
+      <div class="item-kicker">📐 Set up your graph — choose a y-axis scale</div>
+      <p class="prompt">${item.scalePrompt}</p>
+      <div class="row" style="align-items:center; gap:10px; flex-wrap:wrap;">
+        <label class="field-label" style="margin:0;">Top of y-axis:</label>
+        <input type="number" id="yscale-${item.id}" placeholder="e.g. 100" value="${st.yScaleInput||""}" style="max-width:130px; margin:0;">
+      </div>
+      ${fb}
+      <div class="item-actions"><button class="btn btn-primary" data-setyscale="${item.id}">Set Scale →</button></div>
+    </div>`;
+  }
+  const allDone = st.placed.length===item.dataPoints.length;
+  if(allDone && !st.done) markCorrect(item,10);
+  const svg = buildPHGraphSVG(item, st);
+  const phCells = item.dataPoints.map(p=>`<th>${p[0]}</th>`).join("");
+  const rateCells = item.dataPoints.map((p,i)=>`<td class="${st.placed.includes(i)?'plotted-cell':''}">${p[1]}${st.placed.includes(i)?' ✓':''}</td>`).join("");
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">📊 Plot the graph — tap the grid to place each point ${st.done?'<span class="solved-badge">✅ Graph complete</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <p style="color:var(--muted); font-size:12.5px; margin:-8px 0 12px;">Your team's y-axis scale: 0 to ${st.yScale}</p>
+    <table class="obs-table data-table-ph">
+      <thead><tr><th>pH</th>${phCells}</tr></thead>
+      <tbody><tr><td><b>Rate</b></td>${rateCells}</tr></tbody>
+    </table>
+    <div class="temp-graph-wrap">${svg}</div>
+    <p style="color:var(--muted); font-size:12px; margin-top:8px;">Points plotted: ${st.placed.length} / ${item.dataPoints.length}</p>
+    ${allDone?`<div class="feedback ok">✅ Graph complete — great plotting! The curve shows how this enzyme's activity changes with pH.</div>`:""}
+    ${!allDone?hintBox:""}
+    <div class="item-actions">
+      ${!allDone?hintBtn:""}
+    </div>
+  </div>`;
+}
+function itemGraphRead(item, st, hintBtn, hintBox){
+  const tempBtns = item.tempOptions.map(t=>`<button class="temp-btn ${st.selectedTemp===t?"selected":""}" data-temp="${t}" data-item="${item.id}" ${st.done?"disabled":""}>${t}°C</button>`).join("");
+  const svg = buildTempGraphSVG(st.selectedTemp);
+  let fb = "";
+  if(st.done) fb = `<div class="feedback ok">✅ ${item.fbCorrect}</div>`;
+  else if(st.checked && st.wrongFlash) fb = `<div class="feedback bad"><span class="access-denied">⚠ Access Denied</span>${item.fbWrong}</div>`;
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">📈 Read the graph ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="temp-graph-wrap">${svg}</div>
+    <div class="temp-btn-row">${tempBtns}</div>
+    ${fb}
+    ${!st.done?hintBox:""}
+    <div class="item-actions">
+      ${!st.done ? `<button class="btn btn-primary" data-check="${item.id}" ${st.selectedTemp===undefined?"disabled":""}>Check Answer</button>` : ""}
+      ${!st.done?hintBtn:""}
+    </div>
+  </div>`;
+}
+function itemFoodTest(item, st){
+  const testLabels = {iodine:"Iodine", benedict:"Benedict's", biuret:"Biuret", ethanol:"Ethanol emulsion"};
+  const tubes = Object.keys(FOODTEST_DATA).map(k=>`<button class="tube-btn ${st.tube===k?"selected":""}" data-tube="${k}" data-item="${item.id}"><span class="tube-glyph">🧪</span>${FOODTEST_DATA[k].name}</button>`).join("");
+  const tests = Object.entries(testLabels).map(([k,l])=>`<button class="tube-btn ${st.test===k?"selected":""}" data-test="${k}" data-item="${item.id}"><span class="tube-glyph">🧫</span>${l}</button>`).join("");
+  if(!st.rows) st.rows=[];
+  const ranCount = st.rows.length;
+  if(ranCount>=3 && !st.done){ st.done=true; }
+  const tableRows = st.rows.map(r=>`<tr><td>${r.sample}</td><td>${r.test}</td><td>${r.obs}</td></tr>`).join("");
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">Virtual food-testing bench ${st.done?'<span class="solved-badge">✅ Enough tests run</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="tube-row">${tubes}</div>
+    <div class="tube-row">${tests}</div>
+    <div class="row"><button class="btn btn-amber" data-runtest="${item.id}" ${(!st.tube||!st.test)?"disabled":""}>▶ Run Test</button></div>
+    <table class="obs-table">
+      <thead><tr><th>Sample</th><th>Test</th><th>Observation</th></tr></thead>
+      <tbody>${tableRows || `<tr><td colspan="3" class="obs-empty">No tests run yet — your results will be recorded here.</td></tr>`}</tbody>
+    </table>
+    <label class="field-label" style="margin-top:14px;">Team's conclusions (not marked — just for your own notes)</label>
+    <textarea id="ta-${item.id}-notes" placeholder="Based on the table above, what does your team think is in each sample?">${st.notes||""}</textarea>
+    <p style="color:var(--muted); font-size:12.5px; margin-top:10px;">Tests run so far: ${ranCount} / 12 ${ranCount<3?"(run at least 3 to complete this station)":""}</p>
+  </div>`;
+}
+function itemEnzymeFit(item, st){
+  const shapes = SHAPES.map(s=>`<button class="shape-btn ${st.shapePicked===s.id?"selected":""}" data-shape="${s.id}" data-item="${item.id}">${s.glyph}</button>`).join("");
+  let feedback="";
+  if(st.shapePicked){
+    const sh = SHAPES.find(x=>x.id===st.shapePicked);
+    if(sh.fits){ feedback = `<div class="feedback ok">✅ Fit! The hexagon substrate matches the active site — an enzyme-substrate complex forms and products are released.</div>`; if(!st.done) markCorrect(item,5); }
+    else { feedback = `<div class="feedback bad">✗ No fit — this shape doesn't match the active site, so no reaction occurs. Try another shape.</div>`; }
+  }
+  return `<div class="item-card">
+    <div class="item-kicker">3D model — drag to inspect the enzyme and its active site</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="m3d-scene" id="m3d-enzyme"><div class="m3d-group" id="m3d-enzyme-group"></div><div class="m3d-label">Enzyme + active site + substrate</div><div class="m3d-hint">🖐 Drag to rotate</div></div>
+    ${m3dLegendHTML([["Enzyme (with active site notch)",M3D_COL.E],["Substrate",M3D_COL.S]])}
+    <div class="item-kicker" style="margin-top:18px;">Now try each substrate shape below</div>
+    <div class="shape-row">${shapes}</div>
+    ${feedback}
+  </div>`;
+}
+function itemLabelDiagram(item, st, hintBtn, hintBox){
+  if(!st.assign) st.assign={};
+  const wordbank = item.labels.map(l=>{
+    const used = Object.values(st.assign).includes(l);
+    return `<button class="wordbank-item ${st.selectedWord===l?"selected":""} ${used?"used":""}" data-labelword="${l}" data-item="${item.id}" ${used?"disabled":""}>${l}</button>`;
+  }).join("");
+  const allDone = Object.keys(st.assign).length===item.labels.length;
+  if(allDone && !st.done) markCorrect(item,10);
+  return `<div class="item-card ${st.done?"solved":""}">
+    <div class="item-kicker">🔒 Lock-and-key diagram — tap a label, then tap the matching part ${st.done?'<span class="solved-badge">✅ Solved</span>':""}</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="m3d-scene" id="m3d-label"><div class="m3d-group" id="m3d-label-group"></div><div class="m3d-label">Tap a part to label it</div></div>
+    <div class="wordbank">${wordbank}</div>
+    ${allDone?`<div class="feedback ok">✅ All parts correctly labelled — you've matched the lock-and-key model!</div>`:""}
+    ${!allDone?hintBox:""}
+    <div class="item-actions">
+      ${!allDone?hintBtn:""}
+    </div>
+  </div>`;
+}
+function itemFinalLock(item, st){
+  if(!st.keyEntered) st.keyEntered=[];
+  const slots = S.codes.map((c,i)=>`<div class="key-slot ${st.keyEntered[i]!==undefined?"filled":""}">${st.keyEntered[i]!==undefined?st.keyEntered[i]:"•"}</div>`).join("");
+  const digitPool = S.codes.map((c,i)=>`<button class="digit-btn" data-digit="${c}" data-idx="${i}" data-item="${item.id}" ${st.keyEntered.includes(c)?"disabled":""}>${c}</button>`).join("");
+  const solved = st.keyEntered.length===S.codes.length && st.keyEntered.every((v,i)=>v===S.codes[i]);
+  if(solved && !st.done){ markCorrect(item,10); }
+  return `<div class="item-card" style="text-align:center;">
+    <div class="item-kicker">Final override lock</div>
+    <p class="prompt">${item.prompt}</p>
+    <div class="keypad">${slots}</div>
+    ${!solved?`<div class="digit-pool">${digitPool}</div><button class="tool-btn" style="margin-top:14px;" data-keyreset="${item.id}">↺ Reset</button>`:`<div class="feedback ok">✅ LOCK OVERRIDDEN — the exit door slides open!</div>`}
+  </div>`;
+}
+
+/* ---------------- canvas drawing ---------------- */
+let cvCtx=null, cvDrawing=false, cvTool="pen", cvStrokes=[], cvCurrent=null, cvBoundCanvas=null;
+function initCanvas(){
+  const c = document.getElementById("draw-canvas");
+  if(!c) return;
+  cvBoundCanvas = c;
+  const dpr = window.devicePixelRatio||1;
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width*dpr; c.height = rect.height*dpr;
+  cvCtx = c.getContext("2d"); cvCtx.scale(dpr,dpr);
+  cvCtx.lineCap="round"; cvCtx.lineJoin="round";
+  redrawCanvas();
+  const pos = e=>{ const r=c.getBoundingClientRect(); const p = e.touches?e.touches[0]:e; return [p.clientX-r.left, p.clientY-r.top]; };
+  c.onpointerdown = e=>{ cvDrawing=true; const [x,y]=pos(e);
+    if(cvTool==="text"){ const t=prompt("Label text:"); if(t){ cvStrokes.push({type:"text", x,y,t}); redrawCanvas(); } cvDrawing=false; return; }
+    cvCurrent={type:"path", tool:cvTool, pts:[[x,y]]}; cvStrokes.push(cvCurrent); };
+  c.onpointermove = e=>{ if(!cvDrawing||!cvCurrent) return; const [x,y]=pos(e); cvCurrent.pts.push([x,y]); redrawCanvas(); };
+  c.onpointerup = ()=>{ cvDrawing=false; cvCurrent=null; touchActivity(); };
+  c.onpointerleave = ()=>{ cvDrawing=false; cvCurrent=null; };
+}
+function redrawCanvas(){
+  if(!cvCtx) return;
+  const c=document.getElementById("draw-canvas"); if(!c) return;
+  const dpr=window.devicePixelRatio||1;
+  cvCtx.clearRect(0,0,c.width/dpr,c.height/dpr);
+  cvStrokes.forEach(s=>{
+    if(s.type==="text"){ cvCtx.fillStyle="#17241F"; cvCtx.font="16px Inter, sans-serif"; cvCtx.fillText(s.t, s.x, s.y); return; }
+    cvCtx.strokeStyle = s.tool==="eraser" ? "#FFFFFF" : "#0E9E90";
+    cvCtx.lineWidth = s.tool==="eraser" ? 22 : 3;
+    cvCtx.beginPath();
+    s.pts.forEach((p,i)=> i===0?cvCtx.moveTo(p[0],p[1]):cvCtx.lineTo(p[0],p[1]));
+    cvCtx.stroke();
+  });
+}
+
+/* ---------------- event binding ---------------- */
+function bindEvents(){
+  const $=(s)=>document.querySelectorAll(s);
+  $("#btn-join").forEach?.(()=>{});
+  const byId=(id)=>document.getElementById(id);
+  if(byId("btn-join")) byId("btn-join").onclick=async()=>{
+    const v = byId("in-code").value.trim().toUpperCase();
+    if(!v){ byId("in-code").focus(); return; }
+    joinCodeInput=v; S.sessionCode=v; S.offline=false;
+    await pollMeta();
+    S.screen="brief"; render();
+  };
+  if(byId("btn-practice")) byId("btn-practice").onclick=()=>{
+    S.offline=true; S.sessionCode=null; S.meta={sessionStart:Date.now()};
+    S.screen="brief"; render();
+  };
+  if(byId("btn-to-setup")) byId("btn-to-setup").onclick=()=>{ S.screen="teamsetup"; render(); };
+  document.querySelectorAll(".stu-input").forEach(inp=>{
+    inp.oninput = ()=>{ S.students[+inp.dataset.i] = inp.value; };
+  });
+  if(byId("in-teamname")) byId("in-teamname").oninput=(e)=>{ S.teamName=e.target.value; };
+  if(byId("btn-quickfill")) byId("btn-quickfill").onclick=()=>{
+    S.teamName = S.teamName || "The Enzyme Avengers";
+    S.students = ["Ariel","Bala","Chen Wei","Divya","Elson"];
+    render();
+  };
+  if(byId("btn-begin")) byId("btn-begin").onclick=()=>{
+    S.teamSlug = slug(S.teamName)+"_"+Math.random().toString(36).slice(2,6);
+    S.startedAt=Date.now(); S.screen="game"; S.chIndex=0; S.itemIndex=0;
+    S.phase = CHALLENGES[0].recall ? "recall" : "items";
+    if(!S.offline) startPolling();
+    startTicker();
+    render(); saveState();
+  };
+
+  document.querySelectorAll("[data-mcq]").forEach(b=>{
+    b.onclick=()=>{
+      const id=b.dataset.mcq, i=+b.dataset.i;
+      const item = findItem(id); const st=getIS(id);
+      if(st.done) return;
+      st.selected=i; st.wrongFlash=false;
+      touchActivity(); rerenderItem(item);
+    };
+  });
+  document.querySelectorAll("[data-check]").forEach(b=>{
+    b.onclick=()=>{
+      const id=b.dataset.check; const item=findItem(id); const st=getIS(id);
+      if(item.type==="mcq"){
+        st.attempts++;
+        if(st.selected===item.correct){ markCorrect(item); rerenderItem(item); }
+        else{ st.wrongFlash=true; playTone("bad"); rerenderItem(item); }
+      } else if(item.type==="shortanswer"){
+        const ta=document.getElementById("ta-"+id); st.text=ta.value;
+        st.attempts++; st.checked=true;
+        const kwHit=item.keywords.filter(k=>st.text.toLowerCase().includes(k.toLowerCase())).length;
+        if(st.text.trim().length>(item.minLength||8) && kwHit>=1){ markCorrect(item); } else { playTone("bad"); }
+        rerenderItem(item);
+      } else if(item.type==="graphread"){
+        st.attempts++; st.checked=true;
+        if(Math.abs(st.selectedTemp-item.correctTemp)<=item.tolerance){ st.wrongFlash=false; markCorrect(item); }
+        else { st.wrongFlash=true; playTone("bad"); }
+        rerenderItem(item);
+      }
+    };
+  });
+  document.querySelectorAll("[data-temp]").forEach(b=>{
+    b.onclick=()=>{
+      const item=findItem(b.dataset.item); const st=getIS(item.id);
+      if(st.done) return;
+      st.selectedTemp=+b.dataset.temp; st.wrongFlash=false;
+      touchActivity(); rerenderItem(item);
+    };
+  });
+  document.querySelectorAll('svg[id^="phgraph-"]').forEach(svg=>{
+    svg.onclick=(evt)=>{
+      const item=findItem(svg.dataset.item); if(!item) return;
+      const st=getIS(item.id);
+      if(st.done) return;
+      handlePHGraphClick(item, st, evt);
+    };
+  });
+  document.querySelectorAll("[data-setyscale]").forEach(b=>{
+    b.onclick=()=>{
+      const item=findItem(b.dataset.setyscale); const st=getIS(item.id);
+      const inp=document.getElementById("yscale-"+item.id);
+      const val=parseFloat(inp.value);
+      const maxData=Math.max(...item.dataPoints.map(p=>p[1]));
+      st.yScaleInput=inp.value;
+      if(isNaN(val) || val<=0){ st.yScaleError="Enter a positive number for your y-axis maximum."; }
+      else if(val<maxData){ st.yScaleError=`Your highest data point is ${maxData} — that won't fit on your graph! Try a bigger value.`; }
+      else if(val>maxData*2.2){ st.yScaleError=`That leaves a lot of empty space on your graph — try a value closer to your data's range (just above ${maxData}).`; }
+      else { st.yScale=val; st.yScaleError=null; playTone("ok"); }
+      touchActivity(); rerenderItem(item);
+    };
+  });
+  document.querySelectorAll("[data-hint]").forEach(b=>{ b.onclick=()=>{ const item=findItem(b.dataset.hint); useHint(item); }; });
+
+  // matching
+  document.querySelectorAll("[data-mleft]").forEach(b=>{
+    b.onclick=()=>{
+      const item = findItem(b.dataset.item); const st=getIS(item.id);
+      const i=+b.dataset.mleft;
+      if(st.pairs[i]!==undefined) return;
+      st.selectedLeft=i; touchActivity(); rerenderItem(item);
+    };
+  });
+  document.querySelectorAll("[data-mright]").forEach(b=>{
+    b.onclick=()=>{
+      const item = findItem(b.dataset.item); const st=getIS(item.id);
+      const j=+b.dataset.mright;
+      if(st.selectedLeft===undefined || st.selectedLeft===null) return;
+      if(Object.values(st.pairs).includes(j)) return;
+      const i=st.selectedLeft;
+      if(item.correctMap[i]===j){
+        st.pairs[i]=j; st.selectedLeft=null;
+        if(Object.keys(st.pairs).length===item.left.length){ st.done=true; markCorrect(item); }
+        touchActivity(); rerenderItem(item);
+      } else {
+        playTone("bad");
+        b.classList.add("shake"); setTimeout(()=>{ st.selectedLeft=null; rerenderItem(item); },350);
+      }
+    };
+  });
+
+  // order
+  document.querySelectorAll("[data-ord]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.item); const st=getIS(item.id); st.order.push(+b.dataset.ord); if(st.attempts===0) st.attempts=1; touchActivity(); rerenderItem(item); };
+  });
+  document.querySelectorAll("[data-ordreset]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.ordreset); const st=getIS(item.id); st.order=[]; st.checked=false; st.attempts++; rerenderItem(item); };
+  });
+
+  // canvas
+  document.querySelectorAll("[data-tool]").forEach(b=>{
+    b.onclick=()=>{ cvTool=b.dataset.tool; document.querySelectorAll("[data-tool]").forEach(x=>x.classList.remove("active")); b.classList.add("active"); };
+  });
+  const cvUndo=document.querySelector("[data-cvundo]"); if(cvUndo) cvUndo.onclick=()=>{ cvStrokes.pop(); redrawCanvas(); };
+  const cvClear=document.querySelector("[data-cvclear]"); if(cvClear) cvClear.onclick=()=>{ cvStrokes=[]; redrawCanvas(); };
+  document.querySelectorAll("[data-annotateready]").forEach(b=>{
+    b.onclick=()=>{
+      const item=findItem(b.dataset.annotateready); if(!item) return;
+      const st=getIS(item.id); st.done=true;
+      touchActivity(); rerenderItem(item);
+    };
+  });
+  const recallReady=document.querySelector("[data-recallready]");
+  if(recallReady) recallReady.onclick=()=>{ S.phase="items"; S.itemIndex=0; touchActivity(); render(); saveState(); };
+  const continueCh=document.getElementById("btn-continue-ch");
+  if(continueCh) continueCh.onclick=()=>{ continueAfterUnlock(); };
+  const unlockBtn=document.getElementById("btn-unlock-chamber");
+  if(unlockBtn) unlockBtn.onclick=()=>{ finishChallenge(); };
+  const dc = document.getElementById("draw-canvas");
+  if(dc && dc!==cvBoundCanvas){ cvStrokes=[]; setTimeout(initCanvas,20); }
+  else if(!dc){ cvBoundCanvas=null; }
+  if(document.querySelector(".m3d-scene")){ setTimeout(mountAllM3DScenes,20); }
+  document.querySelectorAll("[data-m3dtab]").forEach(b=>{
+    b.onclick=()=>{ recallM3DPreset=b.dataset.m3dtab; touchActivity(); render(); };
+  });
+  document.querySelectorAll("[data-labelword]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.item); const st=getIS(item.id); st.selectedWord=b.dataset.labelword; touchActivity(); rerenderItem(item); };
+  });
+
+  // food test
+  const testLabels = {iodine:"Iodine", benedict:"Benedict's", biuret:"Biuret", ethanol:"Ethanol emulsion"};
+  document.querySelectorAll("[data-tube]").forEach(b=>{ b.onclick=()=>{ const item=findItem(b.dataset.item); const st=getIS(item.id); st.tube=b.dataset.tube; rerenderItem(item); }; });
+  document.querySelectorAll("[data-test]").forEach(b=>{ b.onclick=()=>{ const item=findItem(b.dataset.item); const st=getIS(item.id); st.test=b.dataset.test; rerenderItem(item); }; });
+  document.querySelectorAll("[data-runtest]").forEach(b=>{
+    b.onclick=()=>{
+      const item=findItem(b.dataset.runtest); const st=getIS(item.id);
+      const notesEl = document.getElementById("ta-"+item.id+"-notes");
+      if(notesEl) st.notes = notesEl.value;
+      const res = FOODTEST_DATA[st.tube][st.test];
+      st.results[st.tube+st.test]=res;
+      if(!st.rows) st.rows=[];
+      st.rows.push({sample:FOODTEST_DATA[st.tube].name, test:testLabels[st.test], obs:res});
+      touchActivity(); rerenderItem(item);
+    };
+  });
+  document.querySelectorAll("textarea[id$='-notes']").forEach(ta=>{
+    ta.onblur=()=>{
+      const itemId = ta.id.replace(/^ta-/,"").replace(/-notes$/,"");
+      const item=findItem(itemId); if(!item) return;
+      const st=getIS(item.id); st.notes=ta.value; touchActivity(); saveState();
+    };
+  });
+
+  // enzyme fit (legacy, unused by current content — kept safe if ever re-enabled)
+  document.querySelectorAll("[data-shape]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.item); if(!item) return; const st=getIS(item.id); st.shapePicked=b.dataset.shape; touchActivity(); rerenderItem(item); };
+  });
+
+  // final lock
+  document.querySelectorAll("[data-digit]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.item); const st=getIS(item.id); if(!st.keyEntered) st.keyEntered=[]; st.keyEntered.push(b.dataset.digit); touchActivity(); rerenderItem(item); };
+  });
+  document.querySelectorAll("[data-keyreset]").forEach(b=>{
+    b.onclick=()=>{ const item=findItem(b.dataset.keyreset); const st=getIS(item.id); st.keyEntered=[]; rerenderItem(item); };
+  });
+}
+function findItem(id){ for(const c of CHALLENGES) for(const it of c.items) if(it.id===id) return it; }
+function currentItem(){ return CHALLENGES[S.chIndex].items[S.itemIndex]; }
+
+/* ---------------- timers ---------------- */
+function startPolling(){ clearInterval(pollTimer); pollTimer=setInterval(pollMeta, 4000); pollMeta(); }
+function startTicker(){ clearInterval(tickTimer); tickTimer=setInterval(()=>{ if(S.screen==="game") renderHUD(); }, 1000); }
+window.__initStudentApp = function(){ render(); };
+
+})();
+</script>
+<script>
+(function(){
+
+/* =====================================================================
+   BIO-LAB LOCKDOWN — teacher mission control dashboard
+===================================================================== */
+const LESSON_SECONDS = 30*60;
+const PACING = [
+  {label:"Setup", from:0, to:3, icon:"👥"},
+  {label:"Ch.1 Vault", from:3, to:7, icon:"🧪"},
+  {label:"Ch.2 Food Lab", from:7, to:12, icon:"🧫"},
+  {label:"Ch.3 Code", from:12, to:17, icon:"🔐"},
+  {label:"Ch.4 Enzyme", from:17, to:22, icon:"🧬"},
+  {label:"Ch.5 Mystery", from:22, to:27, icon:"🔍"},
+  {label:"Ch.6 Final", from:27, to:30, icon:"🚪"}
+];
+const CH_ICONS = ["🧪","🧫","🔐","🧬","⚗️","🚪"];
+const CH_NAMES = ["The Molecule Vault","The Food Testing Lab","Crack the Molecule Code","The Enzyme Chamber","The Enzyme Conditions Lab","Final Escape"];
+// cumulative item counts per challenge, must mirror student app content structure
+const CH_ITEM_COUNTS = [5,6,5,5,8,5];
+const TOTAL_ITEMS = CH_ITEM_COUNTS.reduce((a,b)=>a+b,0);
+
+const ANSWER_KEY = [
+{ title:"Challenge 1 · The Molecule Vault", code:"7", items:[
+  {q:"Match: Carbohydrate / Protein / Fat → building block.", a:"Carbohydrate→simple sugars · Protein→amino acids · Fat→fatty acids & glycerol", note:"Watch for students who think proteins are made of sugars — common mix-up with carbohydrates."},
+  {q:"Long branched glucose chain stored in liver/muscle — what is it?", a:"Glycogen (a carbohydrate)", note:"Some students confuse glycogen with glucose itself — glycogen is the storage polymer, glucose is the monomer."},
+  {q:"Which molecule gives most energy/gram and is used for long-term storage?", a:"Fat", note:"Misconception: many assume carbohydrates store the most energy since they're the 'main' energy source discussed first."},
+  {q:"Thinking question: what extra feature would a protein need to actually function as an enzyme?", a:"A specifically-shaped active site complementary to one substrate", note:"Forward-looking synthesis question that foreshadows Challenge 4's lock-and-key content."},
+  {q:"Annotate & write: sketch one molecule from each group with its building block and a use in the body.", a:"Open-ended — not auto-marked", note:"Ungraded reflection activity. Walk past and check teams are using correct terminology (monomer names, at least one real biological use per molecule) while annotating."}
+]},
+{ title:"Challenge 2 · The Food Testing Lab", code:"3", items:[
+  {q:"Sample X turns blue-black with iodine — conclusion?", a:"Starch is present", note:"Push students to separate 'blue-black colour' (observation) from 'starch present' (conclusion)."},
+  {q:"Which part of a result statement is the OBSERVATION?", a:"The colour change itself, not the inferred substance", note:"Classic Sec 3 exam skill — many lose marks conflating observation and conclusion."},
+  {q:"Correct order of Benedict's test steps", a:"Add an equal volume of Benedict's solution → mix well → heat in a boiling water bath → observe colour change", note:"Common error: students forget 'equal volume' and 'mix well', or think the colour appears without heating."},
+  {q:"Application: Sample W is positive for iodine AND Biuret, negative for ethanol emulsion. What's in it?", a:"Starch and protein, but no fat", note:"Data-synthesis question — students must combine two positive results rather than treat each test in isolation. Watch for teams who only report one molecule."},
+  {q:"Annotate & write: sketch the three test tubes, label each result, and mark it as observation or conclusion.", a:"Open-ended — not auto-marked", note:"Ungraded reflection activity. Good spot-check: do students correctly separate what they saw from what they concluded?"}
+]},
+{ title:"Challenge 3 · Crack the Molecule Code", code:"9", items:[
+  {q:"Clue: glucose chains, found in rice/bread, blue-black with iodine.", a:"Starch", note:"Free-text — check students name the molecule, not just 'carbohydrate' generically. Single-word answers like 'starch' are accepted."},
+  {q:"Clue: amino acids, purple/lilac with Biuret.", a:"Protein", note:""},
+  {q:"Error-spot: 'proteins made of fatty acids, fats made of amino acids'.", a:"Building blocks are swapped — proteins=amino acids, fats=fatty acids+glycerol", note:"Good discriminator question — reveals students who've memorised terms without understanding pairing."},
+  {q:"Thinking question: starch and cellulose are both glucose polymers, so why do they behave so differently?", a:"The arrangement/linkage of monomers, not just the monomer itself, determines shape and function", note:"A structure-function reasoning question — stronger teams should articulate that identical building blocks can form different molecules depending on how they're joined."},
+  {q:"Annotate & write: draw a concept map linking building block → molecule → food test for starch and protein.", a:"Open-ended — not auto-marked", note:"Ungraded reflection activity. Check for correct arrows (e.g. glucose→starch→iodine, not crossed with protein's chain)."}
+]},
+{ title:"Challenge 4 · The Enzyme Chamber", code:"5", items:[
+  {q:"Interactive: label the lock-and-key diagram (tap a word, then tap the matching part).", a:"Enzyme = the large body · Active Site = the notch/gap · Substrate = the piece approaching the notch · Product = the pieces formed after the reaction", note:"Interaction only — no written answer, but watch for teams who mix up 'Active Site' and 'Substrate', a common early confusion."},
+  {q:"Define an enzyme.", a:"A biological catalyst that speeds up a reaction and remains chemically unchanged at the end of the reaction", note:"Watch for 'enzymes are used up' — a common misconception."},
+  {q:"Why can an enzyme act on one substrate but not another?", a:"Active site shape is complementary to only one substrate (lock-and-key, specificity)", note:"Expect: 'shape', 'complementary', 'active site', 'specific' as key terms."},
+  {q:"Thinking question: a mutation slightly changes the active site's shape. Predict the effect on substrate binding.", a:"The substrate may no longer fit properly, reducing or preventing the reaction", note:"Links enzyme specificity to genetics — a nice stretch question for stronger teams, connecting to mutation effects covered elsewhere in the syllabus."},
+  {q:"Annotate & write: draw your own enzyme-substrate diagram and explain specificity in your own words.", a:"Open-ended — not auto-marked", note:"Ungraded reflection activity. Good check for whether students can produce a correct diagram unprompted, not just recognise one."}
+]},
+{ title:"Challenge 5 · The Enzyme Conditions Lab", code:"2", items:[
+  {q:"Graph task: tap the temperature that gives the fastest rate of reaction (the optimum).", a:"37°C — the peak of the curve (accepted range 34–40°C)", note:"Watch for teams picking the highest temperature shown (80°C) or the starting point (0°C) instead of the actual peak — a common graph-reading error."},
+  {q:"Why does the rate fall sharply above the optimum temperature?", a:"The enzyme denatures — heat changes the shape of its active site so the substrate no longer fits", note:"Expect the word 'denature'. A common misconception is that the enzyme 'dies' or 'melts' rather than changes shape permanently."},
+  {q:"Why is the rate slow at low temperatures (0–10°C)?", a:"Molecules have less kinetic energy, so fewer successful collisions occur between enzyme and substrate — the enzyme itself is undamaged", note:"Common error: students say the enzyme 'denatures' at low temperature too — denaturing only happens at high temperature; low temperature just slows molecular movement."},
+  {q:"Application: a scientist wants the enzyme to work as slowly as possible without permanent damage. What should they do?", a:"Store it at a low temperature (e.g. 4°C) — reversible slowdown, not denaturing", note:"Synthesis question requiring students to combine both temperature effects from this challenge (reversible slowdown vs. permanent denaturing) into a novel real-world scenario."},
+  {q:"Simulation: plot rate-of-reaction vs pH data (pH 2,4,6,7,8,10,12 → rate 5,25,60,95,58,20,4) onto a blank grid by tapping each point.", a:"Points plotted at the given coordinates; curve peaks at pH 7", note:"A genuine data-handling/graph-plotting skill — students place points themselves rather than reading a pre-drawn curve. Watch for teams who struggle to read the two axes together (a common weak point)."},
+  {q:"Based on the graph just plotted, what is the optimum pH for this enzyme?", a:"pH 7 (neutral) — the peak of the plotted curve", note:"Direct read-off from their own work — reinforces that they trust and can interpret data they generated themselves."},
+  {q:"Application: pepsin works best at pH 2, unlike this enzyme. What does that tell you about pepsin's active site?", a:"Every enzyme has its own optimum pH, matched to its active site's shape — pepsin's is suited to the acidic stomach", note:"Ties back to enzyme specificity from Challenge 4 — a good check for whether students can transfer the 'shape' idea across contexts rather than treating it as a one-off fact."},
+  {q:"Annotate & write: sketch the temperature AND pH curves from memory, label the optima, and compare them.", a:"Open-ended — not auto-marked", note:"Ungraded reflection activity. Good check for whether students retained the general SHAPE of both curves (rise, peak, fall) without looking back."}
+]},
+{ title:"Challenge 6 · Final Escape", code:"—", items:[
+  {q:"Sample: blue-black w/ iodine, no Biuret change, broken down by amylase — identify + explain amylase's role.", a:"Starch present; amylase breaks it into simpler sugars", note:"Synthesis question combining food tests + enzyme action."},
+  {q:"Why can amylase break down starch but not protein?", a:"Amylase's active site shape only fits starch (specificity)", note:""},
+  {q:"Thinking question: enzyme heated to 70°C then cooled to 37°C — will it work normally again?", a:"No — 70°C permanently denatures the enzyme; cooling cannot reverse this (unlike the reversible slowdown from cold)", note:"Capstone synthesis question — checks students distinguish reversible (cold) vs. irreversible (heat/denaturing) effects from Challenge 5."},
+  {q:"Exit ticket — annotate & write: one molecule, one food test, one enzyme idea used today.", a:"Open-ended — not auto-marked", note:"A quick formative check before the final lock. Skim these during debrief to see what stuck across the class."},
+  {q:"Final lock: enter override digits in challenge order.", a:"7 - 3 - 9 - 5 - 2", note:"If a team loses track of their digits, you can read them off that team's card in Mission Control."}
+]}
+];
+
+/* ---------------- state ---------------- */
+let S = { screen:"setup", sessionCode:"", meta:{sessionStart:null}, teams:{}, activeTab:"wall", demo:false, demoTeams:[], drawerTeam:null, attentionActive:false, attentionName:"Mdm Izzati" };
+let pollTimer=null, tickTimer=null, demoTimer=null;
+
+function randCode(){ const chars="ACDEFHJKLMNPQRTUVWXY34679"; let s=""; for(let i=0;i<4;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+
+async function createSession(code){
+  S.sessionCode = code;
+  try{ await SYNC.set(`er:${code}:meta`, JSON.stringify({sessionCode:code, createdAt:Date.now(), sessionStart:null})); }catch(e){}
+  S.meta={sessionStart:null};
+  S.screen="wall"; render();
+  startPolling(); startTicker();
+}
+async function startLesson(){
+  S.meta.sessionStart = Date.now();
+  try{ await SYNC.set(`er:${S.sessionCode}:meta`, JSON.stringify({sessionCode:S.sessionCode, sessionStart:S.meta.sessionStart})); }catch(e){}
+  render();
+}
+async function toggleAttention(){
+  if(S.demo) return;
+  S.attentionActive = !S.attentionActive;
+  try{
+    await SYNC.set(`er:${S.sessionCode}:attention`, JSON.stringify({active:S.attentionActive, message:S.attentionName||"your teacher", ts:Date.now()}));
+  }catch(e){}
+  render();
+}
+async function pollAll(){
+  if(S.demo) return;
+  try{
+    const m = await SYNC.get(`er:${S.sessionCode}:meta`);
+    if(m && m.value) S.meta = JSON.parse(m.value);
+  }catch(e){}
+  try{
+    const list = await SYNC.list(`er:${S.sessionCode}:team:`);
+    if(list && list.keys){
+      const newTeams={};
+      for(const k of list.keys){
+        try{ const r = await SYNC.get(k); if(r && r.value) newTeams[k]=JSON.parse(r.value); }catch(e){}
+      }
+      S.teams = newTeams;
+    }
+  }catch(e){}
+  if(S.screen==="wall") renderWallBody();
+  updateTopbar();
+}
+
+/* ---------------- status logic ---------------- */
+function expectedPercentAtElapsedMin(min){
+  // maps elapsed minutes since lesson start to expected cumulative % progress using PACING (skip setup phase)
+  const chPacing = PACING.slice(1); // challenges only
+  let acc=0;
+  for(let i=0;i<chPacing.length;i++){
+    const seg=chPacing[i];
+    const segItems = CH_ITEM_COUNTS[i];
+    if(min<=seg.from) return Math.round(acc/TOTAL_ITEMS*100);
+    if(min>=seg.to){ acc+=segItems; continue; }
+    const frac=(min-seg.from)/(seg.to-seg.from);
+    return Math.round((acc+segItems*frac)/TOTAL_ITEMS*100);
+  }
+  return 100;
+}
+function teamStatus(t){
+  if(!t) return "notstarted";
+  if(t.finished) return "finished";
+  if(!S.meta.sessionStart) return t.progressPercent>0 ? "ontrack" : "notstarted";
+  const elapsedMin = (Date.now()-S.meta.sessionStart)/60000;
+  const stuckMin = (Date.now()-(t.lastActivity||0))/60000;
+  if(t.progressPercent===0 && elapsedMin<4) return "notstarted";
+  if(stuckMin>=5) return "stuck";
+  const expected = expectedPercentAtElapsedMin(elapsedMin);
+  if(t.progressPercent < expected-15) return "behind";
+  return "ontrack";
+}
+function statusLabel(s){ return {ontrack:"On track", behind:"Falling behind", stuck:"Stuck", finished:"Finished", notstarted:"Not started"}[s]; }
+
+/* ---------------- render root ---------------- */
+function render(){
+  const app=document.getElementById("teacherApp");
+  if(S.screen==="setup") app.innerHTML = screenSetup();
+  else app.innerHTML = screenWall();
+  bindTopLevel();
+  if(S.screen!=="setup"){ renderWallBody(); updateTopbar(); }
+}
+
+function screenSetup(){
+  var savedFbUrl = "";
+  try{ savedFbUrl = localStorage.getItem("biolab-firebase-url") || ""; }catch(e){}
+  return `<div class="stage"><div class="card">
+    <div class="slide-tab">Bio-Lab · Mission Control</div>
+    <div class="eyebrow">Teacher Setup</div>
+    <h1 class="title">Start today's escape room</h1>
+    <p class="lead">Create a session code and share it with your class — students enter it on the student app to join. Then press Start Lesson when everyone is ready and the 30-minute clock will begin for all teams at once.</p>
+    <label style="font-family:var(--mono); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">Session code</label>
+    <input type="text" id="in-setcode" maxlength="6" placeholder="Auto-generated" value="${S.sessionCode}" style="text-transform:uppercase; font-family:var(--mono); font-size:20px; letter-spacing:0.2em;">
+    <label style="font-family:var(--mono); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">Your name (shown on the "Get Attention" screen)</label>
+    <input type="text" id="in-teachername" placeholder="Mdm Izzati" value="${S.attentionName.replace(/"/g,'&quot;')}">
+    <label style="font-family:var(--mono); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">🔥 Live sync database URL (optional)</label>
+    <input type="text" id="in-fburl" placeholder="https://your-project-default-rtdb.firebaseio.com" value="${savedFbUrl.replace(/"/g,'&quot;')}">
+    <p style="color:var(--muted); font-size:12px; margin:-6px 0 14px;">Leave blank to run in local-only mode (works instantly, no setup). Paste a free Firebase Realtime Database URL here to enable live cross-device sync — the join link you share afterwards will carry it automatically, so students don't need to do anything differently. <a href="#" id="fb-help-link" style="color:var(--cyan);">How do I get one?</a></p>
+    <div class="row">
+      <button class="btn btn-primary" id="btn-create">Create Session →</button>
+      <button class="btn btn-ghost" id="btn-regen">🎲 New Code</button>
+    </div>
+    <div class="divider"></div>
+    <p class="lead" style="margin-bottom:12px;">Want to try the wall display first, without a real class?</p>
+    <button class="btn btn-violet" id="btn-demo">🧪 Launch Demo Mode</button>
+  </div></div>`;
+}
+
+function buildJoinLink(){
+  var url = new URL(location.href);
+  url.search = "";
+  url.searchParams.set("role", "student");
+  url.searchParams.set("code", S.sessionCode || "");
+  if(SYNC.mode === "firebase") url.searchParams.set("fb", SYNC.currentUrl());
+  return url.toString();
+}
+function screenWall(){
+  const demoBanner = S.demo ? `<div class="demo-banner">🧪 DEMO MODE — showing simulated teams for testing. No real student data. <button id="btn-exit-demo" style="background:none;border:none;color:var(--violet);text-decoration:underline;cursor:pointer;font-family:var(--mono);font-size:12px;margin-left:10px;">Exit demo</button></div>` : "";
+  const joinBar = (!S.demo && S.sessionCode) ? `<div class="join-link-bar">
+    <span class="jlb-label">${SYNC.mode==="firebase" ? "🔥 Live sync link — share this with every student" : "🔗 Join link (local-only mode — see banner above)"}:</span>
+    <input type="text" id="join-link-field" readonly value="${buildJoinLink()}">
+    <button class="btn btn-primary" id="btn-copy-join-link" style="padding:8px 16px; font-size:13px;">Copy Link</button>
+  </div>` : "";
+  return `${demoBanner}
+  <div id="topbar">
+    <div class="tb-block"><span class="tb-label">Session Code</span><span id="tb-code">${S.sessionCode||"DEMO"}</span></div>
+    <div class="tb-block"><span class="tb-label">Lesson Clock</span><span id="tb-clock" class="mono">--:--</span></div>
+    <div class="tb-block"><span class="tb-label">Class Progress</span><span class="tb-value" id="tb-progress">—</span></div>
+    <div id="tb-pacing"></div>
+    ${!S.meta.sessionStart && !S.demo ? `<button class="btn btn-primary" id="btn-startlesson" style="padding:10px 18px; font-size:14px;">▶ Start Lesson</button>` : ""}
+    <button class="btn ${S.attentionActive?'btn-attention-active':'btn-attention'}" id="btn-attention" ${S.demo?"disabled title='Not available in demo mode'":""} style="padding:10px 16px; font-size:13px;">${S.attentionActive?"✅ Resume Students":"🔔 Get Attention"}</button>
+    <div class="tabs">
+      <button class="tab-btn ${S.activeTab==='wall'?'active':''}" data-tab="wall">🗂 Overview</button>
+      <button class="tab-btn ${S.activeTab==='pacing'?'active':''}" data-tab="pacing">⏱ Pacing</button>
+      <button class="tab-btn ${S.activeTab==='key'?'active':''}" data-tab="key">🔑 Answer Key</button>
+      <button class="tab-btn ${S.activeTab==='analytics'?'active':''}" data-tab="analytics">📊 Analytics</button>
+    </div>
+  </div>
+  ${joinBar}
+  <div id="wall"></div>`;
+}
+
+function bindTopLevel(){
+  const byId=(id)=>document.getElementById(id);
+  if(byId("in-setcode") && !S.sessionCode) byId("in-setcode").value = randCode();
+  if(byId("btn-regen")) byId("btn-regen").onclick=()=>{ byId("in-setcode").value = randCode(); };
+  if(byId("in-teachername")) byId("in-teachername").oninput=(e)=>{ S.attentionName = e.target.value || "Mdm Izzati"; };
+  if(byId("btn-create")) byId("btn-create").onclick=()=>{
+    let code = byId("in-setcode").value.trim().toUpperCase() || randCode();
+    const fbUrl = byId("in-fburl") ? byId("in-fburl").value.trim() : "";
+    SYNC.configure(fbUrl);
+    createSession(code);
+  };
+  if(byId("fb-help-link")) byId("fb-help-link").onclick=(e)=>{
+    e.preventDefault();
+    alert("Getting a free Firebase database URL (about 2 minutes):\n\n1. Go to console.firebase.google.com and create a project (free, no credit card).\n2. In the project, go to Build → Realtime Database → Create Database.\n3. Choose \"Start in test mode\".\n4. Copy the URL shown (looks like https://your-project-default-rtdb.firebaseio.com).\n5. Paste it into the field above and click Create Session.\n\nThat's it — the join link you share afterwards carries this automatically, so students don't need to enter anything.");
+  };
+  if(byId("btn-demo")) byId("btn-demo").onclick=()=>{ launchDemo(); };
+  if(byId("btn-startlesson")) byId("btn-startlesson").onclick=()=>{ startLesson(); };
+  if(byId("btn-exit-demo")) byId("btn-exit-demo").onclick=()=>{ exitDemo(); };
+  if(byId("btn-attention")) byId("btn-attention").onclick=()=>{ toggleAttention(); };
+  if(byId("btn-copy-join-link")) byId("btn-copy-join-link").onclick=()=>{
+    const field = byId("join-link-field");
+    field.select();
+    try{
+      navigator.clipboard.writeText(field.value).then(()=>{
+        const btn = byId("btn-copy-join-link");
+        const original = btn.textContent;
+        btn.textContent = "✅ Copied!";
+        setTimeout(()=>{ btn.textContent = original; }, 1500);
+      });
+    }catch(e){ document.execCommand("copy"); }
+  };
+  document.querySelectorAll(".tab-btn").forEach(b=>{ b.onclick=()=>{ S.activeTab=b.dataset.tab; render(); }; });
+}
+
+/* ---------------- topbar live values ---------------- */
+function updateTopbar(){
+  const clockEl=document.getElementById("tb-clock");
+  if(!clockEl) return;
+  let cls="";
+  if(S.meta.sessionStart){
+    const remain = Math.max(0, Math.round(LESSON_SECONDS-(Date.now()-S.meta.sessionStart)/1000));
+    if(remain<=60) cls="warn-1"; else if(remain<=300) cls="warn-5"; else if(remain<=600) cls="warn-10"; else if(remain<=900) cls="warn-15";
+    clockEl.textContent = `${String(Math.floor(remain/60)).padStart(2,"0")}:${String(remain%60).padStart(2,"0")}`;
+  } else clockEl.textContent = "--:--";
+  clockEl.className = "mono "+cls;
+
+  const teamsArr = getTeamsArray();
+  const progEl=document.getElementById("tb-progress");
+  if(progEl){
+    if(teamsArr.length===0) progEl.textContent="No teams yet";
+    else{
+      const avg = Math.round(teamsArr.reduce((s,t)=>s+(t.progressPercent||0),0)/teamsArr.length);
+      progEl.textContent = avg+"% avg";
+    }
+  }
+  const pacingWrap=document.getElementById("tb-pacing");
+  if(pacingWrap){
+    if(S.meta.sessionStart && teamsArr.length>0){
+      const elapsedMin=(Date.now()-S.meta.sessionStart)/60000;
+      const expected = expectedPercentAtElapsedMin(elapsedMin);
+      const avg = Math.round(teamsArr.reduce((s,t)=>s+(t.progressPercent||0),0)/teamsArr.length);
+      const behind = avg < expected-12;
+      pacingWrap.innerHTML = `<span class="pacing-banner ${behind?'pacing-behind':'pacing-ontrack'}">${behind?"⚠ Class behind pace":"✓ On pace"}</span>`;
+    } else pacingWrap.innerHTML="";
+  }
+}
+
+function getTeamsArray(){
+  if(S.demo) return S.demoTeams;
+  return Object.values(S.teams);
+}
+
+/* ---------------- wall body per tab ---------------- */
+function renderWallBody(){
+  const wall=document.getElementById("wall");
+  if(!wall) return;
+  if(S.activeTab==="wall") wall.innerHTML = wallOverview();
+  else if(S.activeTab==="pacing") wall.innerHTML = wallPacing();
+  else if(S.activeTab==="key") wall.innerHTML = wallAnswerKey();
+  else if(S.activeTab==="analytics") wall.innerHTML = wallAnalytics();
+  bindWallEvents();
+}
+
+function wallOverview(){
+  const teams = getTeamsArray();
+  if(teams.length===0){
+    return `<div class="empty-wall"><div class="big">🧫</div><h3>Waiting for teams to join…</h3>
+      <p>Share the session code <b class="mono" style="color:var(--cyan)">${S.sessionCode||"DEMO"}</b> with your class. Cards will appear here as soon as teams register.</p></div>`;
+  }
+  const cards = teams.map((t,idx)=>{
+    const status = teamStatus(t);
+    const ch = Math.min(t.chIndex, CH_NAMES.length-1);
+    const stuckMin = t.lastActivity ? Math.round((Date.now()-t.lastActivity)/60000) : 0;
+    return `<div class="team-card halo-${status}" data-teamidx="${idx}">
+      <div class="status-pill pill-${status}">${statusLabel(status)}</div>
+      <div class="team-name">${t.teamName || "Unnamed Team"}</div>
+      <div class="team-students">${(t.students||[]).filter(Boolean).join(", ")||"—"}</div>
+      <div class="team-challenge"><span class="team-ch-icon">${t.finished?"🚪":CH_ICONS[ch]}</span><span class="team-ch-text">${t.finished?"Escaped!":(t.currentChallengeTitle||CH_NAMES[ch])}</span></div>
+      <div class="progress-ring-wrap">
+        <div class="progress-track"><div class="progress-fill" style="width:${t.progressPercent||0}%"></div></div>
+        <div class="progress-pct">${t.progressPercent||0}%</div>
+      </div>
+      <div class="team-meta-row">
+        <div>Score<br><b>${t.score||0}</b></div>
+        <div>Hints<br><b>${t.hintsUsed||0}</b></div>
+        <div>Codes<br><b>${(t.codes||[]).length}/5</b></div>
+      </div>
+      ${status==="stuck"?`<div class="checkin-flag">⏸ No activity for ~${stuckMin} min — consider a check-in</div>`:""}
+    </div>`;
+  }).join("");
+  return `<div class="section-title">Live Team Status — tap a card for details</div><div class="team-grid">${cards}</div>`;
+}
+
+function wallPacing(){
+  const total=30;
+  const segs = PACING.map(seg=>{
+    const w = (seg.to-seg.from)/total*100;
+    return `<div class="pacing-seg" style="width:${w}%; left:${seg.from/total*100}%;">${seg.icon}<br>${seg.label}<br>${seg.from}-${seg.to}m</div>`;
+  }).join("");
+  let nowPct=0;
+  if(S.meta.sessionStart) nowPct = Math.min(100, (Date.now()-S.meta.sessionStart)/60000/total*100);
+  return `<div class="pacing-wrap">
+    <div class="section-title">Suggested Lesson Pacing (30 minutes)</div>
+    <div class="pacing-track">${segs}${S.meta.sessionStart?`<div class="pacing-now" style="left:${nowPct}%;"></div>`:""}</div>
+    <p style="color:var(--muted); font-size:13px; margin-top:26px;">${S.meta.sessionStart?"The marker shows where the class should be right now if following the suggested pace. Individual teams may naturally move faster or slower — use it as a guide, not a rule.":"The pacing marker will appear once you start the lesson."}</p>
+  </div>`;
+}
+
+function wallAnswerKey(){
+  const sections = ANSWER_KEY.map(ch=>{
+    const items = ch.items.map(it=>`<div class="key-item">
+      <p class="key-q">${it.q}</p>
+      <p class="key-a">✅ ${it.a}</p>
+      ${it.note?`<p class="key-note">${it.note}</p>`:""}
+    </div>`).join("");
+    return `<div class="key-ch"><h3>${ch.title}</h3><div class="kc-code">Override digit: ${ch.code}</div>${items}</div>`;
+  }).join("");
+  return `<div class="key-wrap"><div class="section-title">Teacher-Only Answer Key</div><p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Not shown to students. Use the notes for common misconceptions and marking guidance on structured questions.</p>${sections}</div>`;
+}
+
+function wallAnalytics(){
+  const teams = getTeamsArray();
+  const finished = teams.filter(t=>t.finished);
+  const avgScore = teams.length ? Math.round(teams.reduce((s,t)=>s+(t.score||0),0)/teams.length) : 0;
+  const completionRate = teams.length ? Math.round(finished.length/teams.length*100) : 0;
+  const avgTime = finished.length ? Math.round(finished.reduce((s,t)=>{ const secs = t.finishedAt&&t.startedAt ? (t.finishedAt-t.startedAt)/1000 : 0; return s+secs; },0)/finished.length/60) : 0;
+
+  // aggregate logs across teams
+  const itemStats = {};
+  teams.forEach(t=>(t.log||[]).forEach(l=>{
+    if(!itemStats[l.id]) itemStats[l.id]={wrong:0, hint:0, total:0};
+    itemStats[l.id].total++;
+    if(l.attempts>1) itemStats[l.id].wrong += (l.attempts-1);
+    if(l.hint) itemStats[l.id].hint++;
+  }));
+  let hardest = null, hardestCount=-1, mostHinted=null, hintCount=-1;
+  Object.entries(itemStats).forEach(([id,st])=>{
+    if(st.wrong>hardestCount){ hardestCount=st.wrong; hardest=id; }
+    if(st.hint>hintCount){ hintCount=st.hint; mostHinted=id; }
+  });
+
+  // concept breakdown by challenge (using progress reached as proxy for exposure + score density)
+  const conceptNames = CH_NAMES;
+  const conceptRows = conceptNames.map((name,i)=>{
+    const reached = teams.filter(t=>t.chIndex>i || (t.chIndex===i) || t.finished).length;
+    const pct = teams.length ? Math.round(reached/teams.length*100) : 0;
+    const color = pct>=70?"var(--lime)":pct>=40?"var(--amber)":"var(--coral)";
+    return `<div class="concept-bar-row"><div class="concept-label">${name}</div><div class="concept-track"><div class="concept-fill" style="width:${pct}%; background:${color};"></div></div><div class="mono" style="width:44px; text-align:right; font-size:12px;">${pct}%</div></div>`;
+  }).join("");
+
+  return `<div class="analytics-wrap">
+    <div class="section-title">End-of-Lesson Analytics ${finished.length===0 && teams.length>0 ? "(live — updates as teams finish)":""}</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="num">${avgScore}</div><div class="lbl">Avg. Score</div></div>
+      <div class="stat-box"><div class="num">${completionRate}%</div><div class="lbl">Completion Rate</div></div>
+      <div class="stat-box"><div class="num">${avgTime||"—"}</div><div class="lbl">Avg. Min. Taken</div></div>
+      <div class="stat-box"><div class="num">${teams.length}</div><div class="lbl">Teams</div></div>
+    </div>
+    <div class="section-title">Reached / Completed by Concept</div>
+    <div style="background:var(--panel-raised); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:30px;">${teams.length? conceptRows : `<p style="color:var(--muted); font-size:13px;">No team data yet.</p>`}</div>
+    <div class="section-title">Where students struggled</div>
+    <div style="background:var(--panel-raised); border:1px solid var(--line); border-radius:16px; padding:22px; font-size:13.5px; color:var(--paper); line-height:1.8;">
+      ${hardest? `Most re-attempted question: <b class="mono" style="color:var(--coral)">${hardest}</b> (${hardestCount} wrong attempts across teams). ` : "No attempt data yet. "}
+      ${mostHinted? `Most-hinted question: <b class="mono" style="color:var(--amber)">${mostHinted}</b> (used by ${hintCount} team-attempts). ` : ""}
+      <br><span style="color:var(--muted);">Cross-check these question IDs against the Answer Key tab to plan what to re-teach.</span>
+    </div>
+  </div>`;
+}
+
+/* ---------------- drawer ---------------- */
+function bindWallEvents(){
+  document.querySelectorAll("[data-teamidx]").forEach(c=>{
+    c.onclick=()=>{ openDrawer(+c.dataset.teamidx); };
+  });
+}
+function openDrawer(idx){
+  const t = getTeamsArray()[idx];
+  const overlay=document.getElementById("drawer-overlay"), drawer=document.getElementById("drawer");
+  const logs = (t.log||[]).slice().reverse().map(l=>`<div class="log-row"><span>${l.id}</span><span class="tag ${l.correct?'tag-ok':'tag-bad'}">${l.correct?'✓ correct':'attempted'}</span></div>`).join("") || `<p style="color:var(--muted); font-size:13px;">No attempts logged yet.</p>`;
+  drawer.innerHTML = `<button class="drawer-close" id="drawer-close">✕</button>
+    <div class="eyebrow" style="color:var(--cyan);">Team Detail</div>
+    <h2 style="margin:0 0 4px;">${t.teamName||"Unnamed Team"}</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">${(t.students||[]).filter(Boolean).join(" · ")||"—"}</p>
+    <div class="stat-grid" style="margin-bottom:24px;">
+      <div class="stat-box"><div class="num">${t.progressPercent||0}%</div><div class="lbl">Progress</div></div>
+      <div class="stat-box"><div class="num">${t.score||0}</div><div class="lbl">Score</div></div>
+      <div class="stat-box"><div class="num">${t.hintsUsed||0}</div><div class="lbl">Hints</div></div>
+    </div>
+    <div class="section-title">Current status</div>
+    <p style="font-size:14px; margin-bottom:18px;">${t.finished? "Escaped the lab! 🎉" : `On ${t.currentChallengeTitle||"—"}, item ${(t.itemIndex||0)+1}`}</p>
+    <div class="section-title">Recent activity log</div>
+    <div>${logs}</div>`;
+  overlay.style.display="block"; drawer.style.display="block";
+  overlay.onclick=closeDrawer;
+  document.getElementById("drawer-close").onclick=closeDrawer;
+}
+function closeDrawer(){ document.getElementById("drawer-overlay").style.display="none"; document.getElementById("drawer").style.display="none"; }
+
+/* ---------------- demo mode ---------------- */
+function launchDemo(){
+  S.demo=true; S.sessionCode="DEMO"; S.meta={sessionStart:Date.now()-4*60000};
+  const names=["Team Alpha","Team Beta","Team Gamma","Team Delta","Team Epsilon"];
+  S.demoTeams = names.map((n,i)=>({
+    teamName:n, students:["Student "+(i*5+1),"Student "+(i*5+2),"Student "+(i*5+3),"Student "+(i*5+4),"Student "+(i*5+5)],
+    chIndex:Math.floor(Math.random()*3), itemIndex:Math.floor(Math.random()*2), score:Math.floor(Math.random()*40),
+    hintsUsed:Math.floor(Math.random()*3), codes:[], progressPercent:Math.floor(Math.random()*40),
+    lastActivity: Date.now()-Math.floor(Math.random()*60000), finished:false, log:[], startedAt:Date.now()-4*60000
+  }));
+  S.demoTeams[4].lastActivity = Date.now()-6*60000; // force one "stuck"
+  S.screen="wall"; S.activeTab="wall"; render();
+  clearInterval(demoTimer);
+  demoTimer=setInterval(()=>{
+    S.demoTeams.forEach((t,i)=>{
+      if(t.finished) return;
+      if(i===4) return; // keep the stuck team stuck for demo purposes
+      if(Math.random()<0.5){
+        t.itemIndex++;
+        t.score += 8; t.progressPercent = Math.min(100, t.progressPercent + Math.floor(100/TOTAL_ITEMS));
+        t.lastActivity = Date.now();
+        t.log = (t.log||[]).concat([{id:"demo_q"+Math.floor(Math.random()*20), type:"mcq", correct:Math.random()>0.3, attempts:1, hint:Math.random()>0.7, ts:Date.now()}]);
+        if(t.chIndex < CH_NAMES.length-1 && t.itemIndex>=CH_ITEM_COUNTS[t.chIndex]){ t.chIndex++; t.itemIndex=0; t.codes.push("x"); }
+        t.currentChallengeTitle = "Challenge "+(t.chIndex+1)+" · "+CH_NAMES[t.chIndex];
+        if(t.progressPercent>=100){ t.finished=true; t.finishedAt=Date.now(); }
+      }
+    });
+    if(S.screen==="wall" && S.activeTab==="wall") renderWallBody();
+    updateTopbar();
+  }, 3500);
+}
+function exitDemo(){
+  clearInterval(demoTimer); S.demo=false; S.demoTeams=[]; S.sessionCode=""; S.meta={sessionStart:null};
+  S.screen="setup"; render();
+}
+
+/* ---------------- timers ---------------- */
+function startPolling(){ clearInterval(pollTimer); pollTimer=setInterval(pollAll, 4000); pollAll(); }
+function startTicker(){ clearInterval(tickTimer); tickTimer=setInterval(updateTopbar, 1000); }
+window.__initTeacherApp = function(){ render(); };
+
+})();
+</script>
+<script>
+/* ============================================================================
+   SYNC — replaces Claude's window.storage entirely. Zero Claude dependency.
+
+   Two modes:
+   - "firebase": real cross-device sync via a free Firebase Realtime Database.
+     No file editing needed — the teacher pastes their database URL into a
+     field in the app itself (Team Setup screen), and the app automatically
+     builds a shareable join LINK that carries that URL as a query parameter.
+     Any student who opens that exact link is configured automatically —
+     nothing to type, nothing to install.
+   - "local": zero-setup fallback used automatically whenever no Firebase URL
+     is configured (via the UI field or the link). Progress is saved in this
+     browser only (survives refresh) but does not sync to other devices.
+   ============================================================================ */
+function readQueryParam(name){
+  try{ return new URLSearchParams(location.search).get(name); }catch(e){ return null; }
+}
+var SYNC = (function(){
+  var base = "";
+
+  function keyToPath(key){ return key.split(":").map(encodeURIComponent).join("/"); }
+
+  var firebaseBackend = {
+    async set(key, value){
+      var res = await fetch(base + "/" + keyToPath(key) + ".json", { method:"PUT", body: JSON.stringify(value) });
+      if(!res.ok) throw new Error("sync set failed (" + res.status + ")");
+      return { key:key, value:value };
+    },
+    async get(key){
+      var res = await fetch(base + "/" + keyToPath(key) + ".json");
+      if(!res.ok) throw new Error("sync get failed (" + res.status + ")");
+      var data = await res.json();
+      if(data === null || data === undefined) throw new Error("not found: " + key);
+      return { key:key, value:data };
+    },
+    async delete(key){
+      var res = await fetch(base + "/" + keyToPath(key) + ".json", { method:"DELETE" });
+      if(!res.ok) throw new Error("sync delete failed (" + res.status + ")");
+      return { key:key, deleted:true };
+    },
+    async list(prefix){
+      var trimmed = prefix.replace(/:$/, "");
+      var res = await fetch(base + "/" + keyToPath(trimmed) + ".json");
+      if(!res.ok) throw new Error("sync list failed (" + res.status + ")");
+      var data = await res.json();
+      var keys = data ? Object.keys(data).map(function(k){ return prefix + decodeURIComponent(k); }) : [];
+      return { keys:keys };
+    }
+  };
+
+  var LOCAL_PREFIX = "biolab::";
+  var localBackend = {
+    async set(key, value){
+      localStorage.setItem(LOCAL_PREFIX + key, JSON.stringify(value));
+      return { key:key, value:value };
+    },
+    async get(key){
+      var raw = localStorage.getItem(LOCAL_PREFIX + key);
+      if(raw === null) throw new Error("not found: " + key);
+      return { key:key, value: JSON.parse(raw) };
+    },
+    async delete(key){
+      localStorage.removeItem(LOCAL_PREFIX + key);
+      return { key:key, deleted:true };
+    },
+    async list(prefix){
+      var keys = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf(LOCAL_PREFIX + prefix) === 0) keys.push(k.slice(LOCAL_PREFIX.length));
+      }
+      return { keys:keys };
+    }
+  };
+
+  var mode = "local";
+  function applyConfig(firebaseUrl){
+    var cleaned = (firebaseUrl || "").trim().replace(/\/$/, "");
+    if(cleaned){ base = cleaned; mode = "firebase"; }
+    else { base = ""; mode = "local"; }
+  }
+
+  // Auto-configure from the shared link (?fb=...) if present, else from anything
+  // remembered locally from a previous session on this device.
+  var fromUrl = readQueryParam("fb");
+  var remembered = null;
+  try{ remembered = localStorage.getItem("biolab-firebase-url"); }catch(e){}
+  applyConfig(fromUrl || remembered || "");
+  if(fromUrl){ try{ localStorage.setItem("biolab-firebase-url", fromUrl); }catch(e){} }
+
+  return {
+    get mode(){ return mode; },
+    configure: function(firebaseUrl){
+      applyConfig(firebaseUrl);
+      try{
+        if(mode === "firebase") localStorage.setItem("biolab-firebase-url", firebaseUrl.trim());
+        else localStorage.removeItem("biolab-firebase-url");
+      }catch(e){}
+    },
+    currentUrl: function(){ return base; },
+    set: function(key, value){ return (mode==="firebase"?firebaseBackend:localBackend).set(key, value); },
+    get: function(key){ return (mode==="firebase"?firebaseBackend:localBackend).get(key); },
+    delete: function(key){ return (mode==="firebase"?firebaseBackend:localBackend).delete(key); },
+    list: function(prefix){ return (mode==="firebase"?firebaseBackend:localBackend).list(prefix); }
+  };
+})();
+
+(function(){
+  function showRole(role){
+    document.getElementById("roleSelect").style.display = "none";
+    document.getElementById("studentRoot").style.display = role==="student" ? "block" : "none";
+    document.getElementById("teacherRoot").style.display = role==="teacher" ? "block" : "none";
+    document.getElementById("role-switch-link").style.display = "block";
+    if(role==="student" && window.__initStudentApp) window.__initStudentApp();
+    if(role==="teacher" && window.__initTeacherApp) window.__initTeacherApp();
+  }
+  document.getElementById("btn-role-student").onclick = function(){ showRole("student"); };
+  document.getElementById("btn-role-teacher").onclick = function(){ showRole("teacher"); };
+  document.getElementById("role-switch-link").onclick = function(e){
+    e.preventDefault();
+    if(!confirm("Switch role? This will reload the page and lose any unsaved local state (your team's saved progress on the server is safe).")) return;
+    location.reload();
+  };
+
+  // If opened via a shared join link (?role=student&code=XXXX[&fb=...]), skip straight in.
+  var urlRole = readQueryParam("role");
+  var urlCode = readQueryParam("code");
+  if(urlRole === "student" || urlRole === "teacher"){
+    showRole(urlRole);
+    if(urlRole === "student" && urlCode){
+      setTimeout(function(){
+        var codeInput = document.getElementById("in-code");
+        if(codeInput) codeInput.value = urlCode.toUpperCase();
+      }, 50);
+    }
+  }
+})();
+
+/* ============ sync health check — zero Claude dependency ============
+   Tells you plainly which mode you're in: LOCAL (works instantly, no setup, this
+   device only) or FIREBASE (real cross-device sync). If Firebase is configured but
+   unreachable, explains why instead of failing silently. Practice Solo / Demo Mode
+   always work regardless of this check. */
+(function(){
+  function showBanner(kind, html){
+    var b = document.getElementById("storageWarningBanner");
+    if(!b) return;
+    b.className = kind;
+    b.innerHTML = '<button class="swb-close" aria-label="Dismiss">✕</button>' + html;
+    b.style.display = "block";
+    var closeBtn = b.querySelector(".swb-close");
+    if(closeBtn) closeBtn.onclick = function(){ b.style.display = "none"; };
+  }
+  async function checkSyncHealth(){
+    if(SYNC.mode === "local"){
+      showBanner("swb-info", "<b>ℹ️ Local-only mode.</b> This works instantly with zero setup, but each device tracks its own progress — the teacher view won't see student devices unless they're the same browser. For real cross-device sync, open the <b>teacher</b> view and enter a free Firebase database URL on the setup screen — no file editing needed. Practice Solo and Demo Mode always work fine either way.");
+      return;
+    }
+    try{
+      var testKey = "__healthcheck__" + Date.now();
+      await SYNC.set(testKey, "ok");
+      var r = await SYNC.get(testKey);
+      try{ await SYNC.delete(testKey); }catch(e2){}
+      if(!r || r.value !== "ok") throw new Error("unexpected response");
+    }catch(e){
+      showBanner("swb-warn", "<b>⚠ Live sync unavailable.</b> Couldn't reach your Firebase database (" + (e && e.message ? e.message : "unknown error") + "). Double-check <code>FIREBASE_DB_URL</code> is correct and that your Realtime Database rules allow read/write. Practice Solo and Demo Mode still work fine without this.");
+    }
+  }
+  setTimeout(checkSyncHealth, 300);
+})();
+</script>
+</body>
+</html>
